@@ -268,3 +268,64 @@
 .btn-sweet:active {
   transform: translateY(0) scale(0.98);
 }
+
+/* Wand wave animation */
+@keyframes wand-wave {
+  0%, 100% { 
+    transform: rotate(-15deg) scale(1); 
+  }
+  25% { 
+    transform: rotate(15deg) scale(1.1); 
+  }
+  50% { 
+    transform: rotate(-10deg) scale(1.05); 
+  }
+  75% { 
+    transform: rotate(10deg) scale(1.1); 
+  }
+}
+
+/* Sparkle float animation */
+@keyframes sparkle-float {
+  0% { 
+    opacity: 0; 
+    transform: translateY(0) scale(0); 
+  }
+  20% { 
+    opacity: 1; 
+    transform: translateY(-10px) scale(1); 
+  }
+  80% { 
+    opacity: 1; 
+    transform: translateY(-30px) scale(1.2); 
+  }
+  100% { 
+    opacity: 0; 
+    transform: translateY(-50px) scale(0); 
+  }
+}
+
+/* Progress bar animation */
+@keyframes progress-bar {
+  0% { 
+    width: 0%; 
+  }
+  50% { 
+    width: 70%; 
+  }
+  100% { 
+    width: 100%; 
+  }
+}
+
+.animate-wand-wave {
+  animation: wand-wave 1s ease-in-out infinite;
+}
+
+.animate-sparkle-float {
+  animation: sparkle-float 2s ease-out infinite;
+}
+
+.animate-progress-bar {
+  animation: progress-bar 3s ease-in-out infinite;
+}

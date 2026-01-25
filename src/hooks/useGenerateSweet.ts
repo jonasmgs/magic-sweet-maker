@@ -40,8 +40,29 @@ export function useGenerateSweet(): GenerateSweetResult {
         body: { ingredients, language, theme },
       });
 
+      // Handle Supabase function errors (including 402, 429)
       if (functionError) {
-        throw new Error(functionError.message);
+        const errorMsg = functionError.message || '';
+        
+        // Check if it's a credits/payment error (402)
+        if (errorMsg.includes('402') || errorMsg.includes('non-2xx')) {
+          setErrorType('credits');
+          setError(language === 'pt' 
+            ? 'Os créditos mágicos acabaram! 😢' 
+            : 'Magic credits ran out! 😢');
+          return;
+        }
+        
+        // Check if it's a rate limit error (429)
+        if (errorMsg.includes('429')) {
+          setErrorType('rate-limit');
+          setError(language === 'pt'
+            ? 'Muita magia de uma vez! Espere um pouquinho... ⏳'
+            : 'Too much magic at once! Wait a moment... ⏳');
+          return;
+        }
+        
+        throw new Error(errorMsg);
       }
 
       if (data.blocked) {
