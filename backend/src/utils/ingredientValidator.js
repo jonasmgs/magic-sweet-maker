@@ -59,22 +59,27 @@ function validateIngredients(ingredients, blockedTerms = []) {
     };
   }
 
-  // Verificar termos bloqueados
-  for (const term of blockedTerms) {
-    if (cleaned.includes(term.toLowerCase())) {
-      return {
-        valid: false,
-        blocked: true,
-        message: 'Ops! Esse ingrediente não é comidinha 😅 Vamos escolher algo gostoso como chocolate, frutas ou leite?'
-      };
-    }
-  }
-
-  // Extrair ingredientes individuais
+  // Extrair ingredientes individuais primeiro
   const ingredientList = cleaned
     .split(/[,;]/)
     .map(i => i.trim())
     .filter(i => i.length > 0);
+
+  // Verificar termos bloqueados (apenas palavras inteiras)
+  for (const term of blockedTerms) {
+    const termLower = term.toLowerCase();
+    for (const ingredient of ingredientList) {
+      // Verifica se o termo bloqueado é uma palavra inteira no ingrediente
+      const wordRegex = new RegExp(`\\b${termLower}\\b`, 'i');
+      if (wordRegex.test(ingredient)) {
+        return {
+          valid: false,
+          blocked: true,
+          message: 'Ops! Esse ingrediente não é comidinha 😅 Vamos escolher algo gostoso como chocolate, frutas ou leite?'
+        };
+      }
+    }
+  }
 
   if (ingredientList.length === 0) {
     return {
