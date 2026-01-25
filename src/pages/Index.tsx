@@ -9,7 +9,7 @@ import { useGenerateSweet } from '@/hooks/useGenerateSweet';
 
 function SweetMagicApp() {
   const { t, theme } = useLanguage();
-  const { recipe, error, isLoading, generateSweet, reset } = useGenerateSweet();
+  const { recipe, error, errorType, isLoading, generateSweet, reset } = useGenerateSweet();
 
   const showResult = recipe || error;
   const isMasculine = theme === 'masculine';
@@ -88,7 +88,7 @@ function SweetMagicApp() {
               <IngredientInput onSubmit={handleSubmit} isLoading={isLoading} />
             </div>
           ) : (
-            <SweetResult recipe={recipe} error={error} onReset={reset} />
+            <SweetResult recipe={recipe} error={error} errorType={errorType} onReset={reset} />
           )}
         </div>
       </main>
