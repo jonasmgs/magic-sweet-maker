@@ -41,7 +41,7 @@ serve(async (req) => {
   }
 
   try {
-    const { ingredients, language } = await req.json();
+    const { ingredients, language, theme = 'feminine' } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -62,8 +62,28 @@ serve(async (req) => {
       );
     }
 
+    const isMasculine = theme === 'masculine';
+
     const systemPrompt = language === 'pt'
-      ? `Você é um chef de doces mágico para crianças! Crie receitas divertidas e seguras.
+      ? isMasculine 
+        ? `Você é um chef de doces SUPER-HERÓI para crianças! Crie receitas épicas com tema de super-heróis.
+
+REGRAS:
+1. Use APENAS ingredientes comestíveis e seguros para crianças
+2. Crie um nome ÉPICO de super-herói para o doce (ex: "Bolo do Poder do Superman", "Cupcake Relâmpago do Flash", "Brownie Vingador")
+3. O nome DEVE ter referência a super-heróis, poderes ou ação
+4. Liste ingredientes simples (máximo 8)
+5. Escreva passos simples em linguagem infantil com tema heróico (máximo 6 passos)
+6. Use emojis de super-heróis: ⚡💪🦸🔥🌟💥
+7. Nunca inclua ingredientes perigosos ou inadequados
+
+Responda APENAS com JSON válido no formato:
+{
+  "name": "Nome Épico de Super-Herói do Doce",
+  "ingredients": ["ingrediente 1", "ingrediente 2"],
+  "steps": ["Passo 1 heróico ⚡", "Passo 2 poderoso 💪"]
+}`
+        : `Você é um chef de doces mágico para crianças! Crie receitas divertidas e seguras.
 
 REGRAS:
 1. Use APENAS ingredientes comestíveis e seguros para crianças
@@ -79,7 +99,25 @@ Responda APENAS com JSON válido no formato:
   "ingredients": ["ingrediente 1", "ingrediente 2"],
   "steps": ["Passo 1 com emojis 💕", "Passo 2 divertido ✨"]
 }`
-      : `You are a magical sweet chef for kids! Create fun and safe recipes.
+      : isMasculine
+        ? `You are a SUPERHERO sweet chef for kids! Create epic superhero-themed recipes.
+
+RULES:
+1. Use ONLY edible and kid-safe ingredients
+2. Create an EPIC superhero name for the sweet (e.g., "Superman's Power Cake", "Flash Lightning Cupcake", "Avenger Brownie")
+3. The name MUST reference superheroes, powers, or action
+4. List simple ingredients (max 8)
+5. Write simple steps in child-friendly language with heroic theme (max 6 steps)
+6. Use superhero emojis: ⚡💪🦸🔥🌟💥
+7. Never include dangerous or inappropriate ingredients
+
+Reply ONLY with valid JSON in this format:
+{
+  "name": "Epic Superhero Sweet Name",
+  "ingredients": ["ingredient 1", "ingredient 2"],
+  "steps": ["Heroic step 1 ⚡", "Powerful step 2 💪"]
+}`
+        : `You are a magical sweet chef for kids! Create fun and safe recipes.
 
 RULES:
 1. Use ONLY edible and kid-safe ingredients
@@ -97,8 +135,12 @@ Reply ONLY with valid JSON in this format:
 }`;
 
     const userPrompt = language === 'pt'
-      ? `Crie uma receita de doce mágico com estes ingredientes: ${ingredients}`
-      : `Create a magical sweet recipe with these ingredients: ${ingredients}`;
+      ? isMasculine
+        ? `Crie uma receita de doce de SUPER-HERÓI épico com estes ingredientes: ${ingredients}`
+        : `Crie uma receita de doce mágico com estes ingredientes: ${ingredients}`
+      : isMasculine
+        ? `Create an epic SUPERHERO sweet recipe with these ingredients: ${ingredients}`
+        : `Create a magical sweet recipe with these ingredients: ${ingredients}`;
 
     // Generate recipe with text model
     const recipeResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -151,10 +193,14 @@ Reply ONLY with valid JSON in this format:
       throw new Error("Failed to parse recipe response");
     }
 
-    // Generate image
+    // Generate image with appropriate style
     const imagePrompt = language === 'pt'
-      ? `Uma imagem 3D fofa estilo Pixar de um doce chamado "${recipe.name}" feito com ${ingredients}. O doce tem um rostinho feliz sorrindo, olhos grandes e expressivos, cores vibrantes em tons pastel. Fundo mágico com brilhos e estrelas. Estilo cartoon fofo para crianças. Ultra alta resolução.`
-      : `A cute 3D Pixar-style image of a sweet dessert called "${recipe.name}" made with ${ingredients}. The dessert has a happy smiling face, big expressive eyes, vibrant pastel colors. Magical background with sparkles and stars. Cute cartoon style for kids. Ultra high resolution.`;
+      ? isMasculine
+        ? `Uma imagem 3D fofa estilo Pixar de um doce de SUPER-HERÓI chamado "${recipe.name}" feito com ${ingredients}. O doce tem formato heroico, cores vibrantes de super-herói (vermelho, azul, dourado), com capa ou máscara ou símbolo de poder. Fundo épico com raios e energia. Estilo cartoon fofo para crianças mas com tema de super-herói. Olhos grandes expressivos. Ultra alta resolução.`
+        : `Uma imagem 3D fofa estilo Pixar de um doce chamado "${recipe.name}" feito com ${ingredients}. O doce tem um rostinho feliz sorrindo, olhos grandes e expressivos, cores vibrantes em tons pastel. Fundo mágico com brilhos e estrelas. Estilo cartoon fofo para crianças. Ultra alta resolução.`
+      : isMasculine
+        ? `A cute 3D Pixar-style image of a SUPERHERO sweet dessert called "${recipe.name}" made with ${ingredients}. The dessert has heroic shape, vibrant superhero colors (red, blue, gold), with cape or mask or power symbol. Epic background with lightning and energy. Cute cartoon style for kids but with superhero theme. Big expressive eyes. Ultra high resolution.`
+        : `A cute 3D Pixar-style image of a sweet dessert called "${recipe.name}" made with ${ingredients}. The dessert has a happy smiling face, big expressive eyes, vibrant pastel colors. Magical background with sparkles and stars. Cute cartoon style for kids. Ultra high resolution.`;
 
     const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -181,7 +227,9 @@ Reply ONLY with valid JSON in this format:
             name: recipe.name,
             ingredients: recipe.ingredients,
             steps: recipe.steps,
-            image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&h=800&fit=crop", // Fallback cute cake image
+            image: isMasculine 
+              ? "https://images.unsplash.com/photo-1635863138275-d9b33299680b?w=800&h=800&fit=crop" // Superhero themed fallback
+              : "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&h=800&fit=crop", // Cute cake fallback
           },
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -198,7 +246,9 @@ Reply ONLY with valid JSON in this format:
           name: recipe.name,
           ingredients: recipe.ingredients,
           steps: recipe.steps,
-          image: generatedImage || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&h=800&fit=crop",
+          image: generatedImage || (isMasculine 
+            ? "https://images.unsplash.com/photo-1635863138275-d9b33299680b?w=800&h=800&fit=crop"
+            : "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800&h=800&fit=crop"),
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
