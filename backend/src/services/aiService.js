@@ -1,18 +1,26 @@
 /**
  * Serviço de Integração com IA
  *
- * Gera receitas e imagens usando OpenAI ou mock para desenvolvimento.
+ * Usa Groq (Mixtral) para texto + Replicate (SDXL) para imagens
+ * Custo: ~$0.003 por geração (94% de lucro no plano $4.99!)
  */
 
-const OpenAI = require('openai');
+const Groq = require('groq-sdk');
+const Replicate = require('replicate');
 
-const USE_MOCK = process.env.NODE_ENV === 'development' && !process.env.OPENAI_API_KEY;
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-}) : null;
+// Configuração
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 
-const TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || 'gpt-4';
-const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'dall-e-3';
+const USE_MOCK = process.env.NODE_ENV === 'development' && (!GROQ_API_KEY || !REPLICATE_API_TOKEN);
+
+// Clientes de IA
+const groq = GROQ_API_KEY ? new Groq({ apiKey: GROQ_API_KEY }) : null;
+const replicate = REPLICATE_API_TOKEN ? new Replicate({ auth: REPLICATE_API_TOKEN }) : null;
+
+// Modelos
+const TEXT_MODEL = process.env.GROQ_MODEL || 'mixtral-8x7b-32768';
+const IMAGE_MODEL = process.env.REPLICATE_MODEL || 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b';
 
 /**
  * Prompts para geração
@@ -49,8 +57,7 @@ Dessert-shaped body, ingredients integrated.
 ${theme === 'masculine' ? 'Superhero style, dynamic pose, action hero vibe.' : 'Disney-Pixar cinematic style.'}
 Big joyful eyes, playful pose.
 ${theme === 'masculine' ? 'Epic cosmic background with stars and energy.' : 'Candy magical background.'}
-Do not add extra elements.
-High quality 3D render --ar 1:1`
+High quality 3D render, vibrant colors, studio lighting`
 };
 
 /**
@@ -155,12 +162,13 @@ function getMockImage(theme) {
 }
 
 /**
- * Gera receita com OpenAI
+ * Gera receita com Groq (Mixtral)
+ * GRÁTIS! 🎉
  */
 async function generateRecipeWithAI(ingredients, theme, language) {
   const prompt = PROMPTS.recipe[language](ingredients, theme);
 
-  const completion = await openai.chat.completions.create({
+  const completion = await groq.chat.completions.create({
     model: TEXT_MODEL,
     messages: [
       {
@@ -188,20 +196,29 @@ async function generateRecipeWithAI(ingredients, theme, language) {
 }
 
 /**
- * Gera imagem com DALL-E
+ * Gera imagem com Replicate (SDXL)
+ * ~$0.002 por imagem 💰
  */
 async function generateImageWithAI(name, theme) {
   const prompt = PROMPTS.image(name, theme);
 
-  const response = await openai.images.generate({
-    model: IMAGE_MODEL,
-    prompt,
-    n: 1,
-    size: '1024x1024',
-    quality: 'standard'
+  const output = await replicate.run(IMAGE_MODEL, {
+    input: {
+      prompt,
+      negative_prompt: 'ugly, blurry, low quality, distorted, disfigured, bad anatomy, text, watermark',
+      width: 1024,
+      height: 1024,
+      num_outputs: 1,
+      scheduler: 'K_EULER',
+      num_inference_steps: 30,
+      guidance_scale: 7.5,
+      refine: 'expert_ensemble_refiner',
+      high_noise_frac: 0.8
+    }
   });
 
-  return response.data[0].url;
+  // Replicate retorna array de URLs
+  return Array.isArray(output) ? output[0] : output;
 }
 
 /**
@@ -211,6 +228,7 @@ async function generateDessert(ingredients, theme = 'feminine', language = 'pt')
   try {
     if (USE_MOCK) {
       console.log('🎭 Usando modo mock para desenvolvimento');
+      console.log('💡 Configure GROQ_API_KEY e REPLICATE_API_TOKEN para usar IA real');
 
       // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -226,13 +244,15 @@ async function generateDessert(ingredients, theme = 'feminine', language = 'pt')
       };
     }
 
-    // Gerar receita com IA
-    console.log('🤖 Gerando receita com IA...');
+    // Gerar receita com Groq (Mixtral) - GRÁTIS!
+    console.log('🤖 Gerando receita com Mixtral (Groq)...');
     const recipe = await generateRecipeWithAI(ingredients, theme, language);
 
-    // Gerar imagem com IA
-    console.log('🎨 Gerando imagem com IA...');
+    // Gerar imagem com Replicate (SDXL) - ~$0.002
+    console.log('🎨 Gerando imagem com SDXL (Replicate)...');
     const image = await generateImageWithAI(recipe.name, theme);
+
+    console.log('✅ Geração completa! Custo estimado: ~$0.002');
 
     return {
       name: recipe.name,
