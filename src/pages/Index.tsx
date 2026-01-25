@@ -1,5 +1,6 @@
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { FloatingDecorations } from '@/components/FloatingDecorations';
 import { IngredientInput } from '@/components/IngredientInput';
 import { SweetResult } from '@/components/SweetResult';
@@ -7,15 +8,24 @@ import { Confetti } from '@/components/Confetti';
 import { useGenerateSweet } from '@/hooks/useGenerateSweet';
 
 function SweetMagicApp() {
-  const { t } = useLanguage();
+  const { t, theme } = useLanguage();
   const { recipe, error, isLoading, generateSweet, reset } = useGenerateSweet();
 
   const showResult = recipe || error;
+  const isMasculine = theme === 'masculine';
+
+  const handleSubmit = (ingredients: string) => {
+    generateSweet(ingredients, theme);
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-background via-muted/30 to-secondary/20 -z-10" />
+      <div className={`fixed inset-0 -z-10 ${
+        isMasculine 
+          ? 'bg-gradient-to-br from-slate-900 via-blue-900/30 to-purple-900/20' 
+          : 'bg-gradient-to-br from-background via-muted/30 to-secondary/20'
+      }`} />
       
       {/* Floating decorations */}
       <FloatingDecorations />
@@ -24,11 +34,16 @@ function SweetMagicApp() {
       <Confetti show={!!recipe} />
 
       {/* Header */}
-      <header className="relative z-10 flex justify-between items-center p-4 md:p-6">
+      <header className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-3 p-4 md:p-6">
         <div className="flex items-center gap-2">
-          <span className="text-3xl md:text-4xl animate-wiggle">🧁</span>
+          <span className="text-3xl md:text-4xl animate-wiggle">
+            {isMasculine ? '🦸‍♂️' : '🧁'}
+          </span>
         </div>
-        <LanguageSwitcher />
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <ThemeSwitcher />
+          <LanguageSwitcher />
+        </div>
       </header>
 
       {/* Main content */}
@@ -36,25 +51,41 @@ function SweetMagicApp() {
         <div className="max-w-4xl mx-auto space-y-8 md:space-y-12">
           {/* Title section */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display text-gradient-candy animate-pop-in">
+            <h1 className={`text-4xl md:text-6xl lg:text-7xl font-display animate-pop-in ${
+              isMasculine 
+                ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-red-500 bg-clip-text text-transparent' 
+                : 'text-gradient-candy'
+            }`}>
               {t.title}
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
               {t.subtitle}
             </p>
             <div className="flex justify-center gap-3 text-3xl md:text-4xl">
-              <span className="animate-bounce-slow" style={{ animationDelay: '0s' }}>🍰</span>
-              <span className="animate-bounce-slow" style={{ animationDelay: '0.2s' }}>🍭</span>
-              <span className="animate-bounce-slow" style={{ animationDelay: '0.4s' }}>🍫</span>
-              <span className="animate-bounce-slow" style={{ animationDelay: '0.6s' }}>🍓</span>
-              <span className="animate-bounce-slow" style={{ animationDelay: '0.8s' }}>🍦</span>
+              {isMasculine ? (
+                <>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0s' }}>🦸</span>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0.2s' }}>⚡</span>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0.4s' }}>💪</span>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0.6s' }}>🔥</span>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0.8s' }}>🌟</span>
+                </>
+              ) : (
+                <>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0s' }}>🍰</span>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0.2s' }}>🍭</span>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0.4s' }}>🍫</span>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0.6s' }}>🍓</span>
+                  <span className="animate-bounce-slow" style={{ animationDelay: '0.8s' }}>🍦</span>
+                </>
+              )}
             </div>
           </div>
 
           {/* Input or Result */}
           {!showResult ? (
             <div className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
-              <IngredientInput onSubmit={generateSweet} isLoading={isLoading} />
+              <IngredientInput onSubmit={handleSubmit} isLoading={isLoading} />
             </div>
           ) : (
             <SweetResult recipe={recipe} error={error} onReset={reset} />
@@ -67,8 +98,8 @@ function SweetMagicApp() {
         <p className="flex items-center justify-center gap-2">
           <span>Made with</span>
           <span className="text-primary animate-pulse">💖</span>
-          <span>for little chefs</span>
-          <span className="animate-wiggle">👨‍🍳</span>
+          <span>for little {isMasculine ? 'heroes' : 'chefs'}</span>
+          <span className="animate-wiggle">{isMasculine ? '🦸' : '👨‍🍳'}</span>
         </p>
       </footer>
     </div>

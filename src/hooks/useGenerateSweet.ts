@@ -14,7 +14,7 @@ interface GenerateSweetResult {
   recipe: Recipe | null;
   error: string | null;
   isLoading: boolean;
-  generateSweet: (ingredients: string) => Promise<void>;
+  generateSweet: (ingredients: string, theme?: 'feminine' | 'masculine') => Promise<void>;
   reset: () => void;
 }
 
@@ -25,14 +25,14 @@ export function useGenerateSweet(): GenerateSweetResult {
   const { language, t } = useLanguage();
   const { toast } = useToast();
 
-  const generateSweet = async (ingredients: string) => {
+  const generateSweet = async (ingredients: string, theme: 'feminine' | 'masculine' = 'feminine') => {
     setIsLoading(true);
     setError(null);
     setRecipe(null);
 
     try {
       const { data, error: functionError } = await supabase.functions.invoke('generate-sweet', {
-        body: { ingredients, language },
+        body: { ingredients, language, theme },
       });
 
       if (functionError) {
