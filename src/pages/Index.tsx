@@ -4,6 +4,7 @@ import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { FloatingDecorations } from '@/components/FloatingDecorations';
 import { IngredientInput } from '@/components/IngredientInput';
 import { SweetResult } from '@/components/SweetResult';
+import { LoadingAnimation } from '@/components/LoadingAnimation';
 import { Confetti } from '@/components/Confetti';
 import { useGenerateSweet } from '@/hooks/useGenerateSweet';
 
@@ -82,8 +83,10 @@ function SweetMagicApp() {
             </div>
           </div>
 
-          {/* Input or Result */}
-          {!showResult ? (
+          {/* Input, Loading, or Result */}
+          {isLoading ? (
+            <LoadingAnimation />
+          ) : !showResult ? (
             <div className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <IngredientInput onSubmit={handleSubmit} isLoading={isLoading} />
             </div>
