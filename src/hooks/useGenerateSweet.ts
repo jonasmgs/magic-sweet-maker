@@ -10,9 +10,12 @@ interface Recipe {
   steps: string[];
 }
 
+type ErrorType = 'generic' | 'credits' | 'rate-limit';
+
 interface GenerateSweetResult {
   recipe: Recipe | null;
   error: string | null;
+  errorType: ErrorType | null;
   isLoading: boolean;
   generateSweet: (ingredients: string, theme?: 'feminine' | 'masculine') => Promise<void>;
   reset: () => void;
@@ -21,6 +24,7 @@ interface GenerateSweetResult {
 export function useGenerateSweet(): GenerateSweetResult {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<ErrorType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { language, t } = useLanguage();
   const { toast } = useToast();
@@ -28,6 +32,7 @@ export function useGenerateSweet(): GenerateSweetResult {
   const generateSweet = async (ingredients: string, theme: 'feminine' | 'masculine' = 'feminine') => {
     setIsLoading(true);
     setError(null);
+    setErrorType(null);
     setRecipe(null);
 
     try {
@@ -50,6 +55,21 @@ export function useGenerateSweet(): GenerateSweetResult {
       }
 
       if (data.error) {
+        // Check for credits/rate limit errors
+        if (data.error.includes('Payment required') || data.error.includes('credits')) {
+          setErrorType('credits');
+          setError(language === 'pt' 
+            ? 'Os créditos mágicos acabaram! 😢' 
+            : 'Magic credits ran out! 😢');
+          return;
+        }
+        if (data.error.includes('Rate limit') || data.error.includes('try again later')) {
+          setErrorType('rate-limit');
+          setError(language === 'pt'
+            ? 'Muita magia de uma vez! Espere um pouquinho... ⏳'
+            : 'Too much magic at once! Wait a moment... ⏳');
+          return;
+        }
         throw new Error(data.error);
       }
 
@@ -61,12 +81,27 @@ export function useGenerateSweet(): GenerateSweetResult {
     } catch (err) {
       console.error('Error generating sweet:', err);
       const errorMessage = err instanceof Error ? err.message : t.errorMessage;
-      setError(errorMessage);
-      toast({
-        variant: "destructive",
-        title: t.errorTitle,
-        description: errorMessage,
-      });
+      
+      // Check error message for specific error types
+      if (errorMessage.includes('Payment required') || errorMessage.includes('credits') || errorMessage.includes('402')) {
+        setErrorType('credits');
+        setError(language === 'pt' 
+          ? 'Os créditos mágicos acabaram! 😢' 
+          : 'Magic credits ran out! 😢');
+      } else if (errorMessage.includes('Rate limit') || errorMessage.includes('429')) {
+        setErrorType('rate-limit');
+        setError(language === 'pt'
+          ? 'Muita magia de uma vez! Espere um pouquinho... ⏳'
+          : 'Too much magic at once! Wait a moment... ⏳');
+      } else {
+        setErrorType('generic');
+        setError(errorMessage);
+        toast({
+          variant: "destructive",
+          title: t.errorTitle,
+          description: errorMessage,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -75,11 +110,13 @@ export function useGenerateSweet(): GenerateSweetResult {
   const reset = () => {
     setRecipe(null);
     setError(null);
+    setErrorType(null);
   };
 
   return {
     recipe,
     error,
+    errorType,
     isLoading,
     generateSweet,
     reset,
