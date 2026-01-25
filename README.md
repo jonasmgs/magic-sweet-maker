@@ -1,73 +1,238 @@
-# Welcome to your Lovable project
+# 🍭 Magic Sweet Maker - Gerador de Sobremesas Mágicas Infantis
 
-## Project info
+Aplicativo completo para gerar sobremesas mágicas infantis usando IA, com:
+- **Web App**: React + Vite + Supabase (raiz do projeto)
+- **Backend**: Node.js + Express (pasta `/backend`)
+- **Mobile**: React Native + Expo (pasta `/mobile`)
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 📁 Estrutura do Projeto
 
-## How can I edit this code?
+```
+magic-sweet-maker/
+├── src/                        # Web App (React + Vite)
+├── backend/                    # API Node.js/Express
+│   ├── src/
+│   │   ├── config/            # Configurações (DB, JWT)
+│   │   ├── controllers/       # Controladores das rotas
+│   │   ├── middleware/        # Auth, rate limit, etc
+│   │   ├── models/            # Models do banco de dados
+│   │   ├── routes/            # Definição das rotas
+│   │   ├── services/          # Serviços (AI, Cache, Credits)
+│   │   └── utils/             # Utilitários
+│   ├── package.json
+│   └── .env.example
+├── mobile/                     # App React Native (Expo)
+│   ├── src/
+│   │   ├── components/        # Componentes reutilizáveis
+│   │   ├── screens/           # Telas do app
+│   │   ├── services/          # APIs e serviços
+│   │   ├── context/           # Context API
+│   │   └── utils/             # Utilitários
+│   ├── App.tsx
+│   └── package.json
+└── README.md
+```
 
-There are several ways of editing your application.
+## 🚀 Funcionalidades
 
-**Use Lovable**
+### Autenticação
+- ✅ Cadastro por email e senha
+- ✅ Login seguro com JWT
+- ✅ Persistência de sessão
+- ✅ Prevenção de múltiplas contas por dispositivo
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Sistema de Planos
+- ✅ **Modo Grátis**: 3 créditos iniciais
+- ✅ **Premium**: 100 créditos/mês com renovação automática
 
-Changes made via Lovable will be committed automatically to this repo.
+### Sistema de Créditos
+- ✅ Cada geração consome 1 crédito
+- ✅ Bloqueio quando créditos acabam
+- ✅ Dashboard de uso
 
-**Use your preferred IDE**
+### Geração com IA
+- ✅ Geração de receita com IA de texto
+- ✅ Geração de personagem 3D com IA de imagem
+- ✅ Cache de resultados para otimização
+- ✅ Logs de uso por usuário
+- ✅ Temas: Doces Fofos 🧁 e Super-Heróis 🦸
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Instalação
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Pré-requisitos
+- Node.js 18+
+- npm ou yarn
+- Expo CLI (para mobile)
 
-Follow these steps:
+### 1. Web App (Raiz)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+# Instalar dependências
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Iniciar desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### 2. Backend
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+cd backend
+npm install
 
-**Use GitHub Codespaces**
+# Configurar variáveis de ambiente
+cp .env.example .env
+# Edite o .env com suas configurações
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Rodar migrations
+npm run migrate
 
-## What technologies are used for this project?
+# Seed com dados de teste
+npm run seed
 
-This project is built with:
+# Iniciar servidor
+npm run dev
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 3. Mobile (Expo)
 
-## How can I deploy this project?
+```bash
+cd mobile
+npm install
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+# Iniciar com Expo
+npx expo start
 
-## Can I connect a custom domain to my Lovable project?
+# Android
+npx expo run:android
 
-Yes, you can!
+# iOS
+npx expo run:ios
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🔧 Variáveis de Ambiente
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Backend (.env)
+```env
+PORT=3000
+NODE_ENV=development
+
+JWT_SECRET=sua-chave-secreta
+JWT_EXPIRES_IN=7d
+
+DATABASE_PATH=./database.sqlite
+
+OPENAI_API_KEY=sk-sua-api-key
+OPENAI_TEXT_MODEL=gpt-4
+OPENAI_IMAGE_MODEL=dall-e-3
+
+FREE_CREDITS=3
+PREMIUM_CREDITS=100
+```
+
+### Mobile
+Configure em `mobile/src/services/api.ts` a URL do backend.
+
+## 📱 Telas do App Mobile
+
+1. **Login/Cadastro** - Autenticação com troca de tema/idioma
+2. **Home** - Seleção de ingredientes com sugestões
+3. **Geração** - Loading animado com varinha mágica ✨
+4. **Resultado** - Receita completa + imagem do personagem
+5. **Histórico** - Lista de sobremesas criadas
+6. **Perfil** - Créditos, plano e configurações
+
+## 📊 API Endpoints
+
+### Autenticação
+```
+POST /api/auth/register - Cadastro
+POST /api/auth/login    - Login
+GET  /api/auth/me       - Dados do usuário
+POST /api/auth/refresh  - Renovar token
+POST /api/auth/logout   - Logout
+```
+
+### Sobremesas
+```
+POST /api/desserts/generate  - Gerar sobremesa (consome 1 crédito)
+GET  /api/desserts/history   - Histórico do usuário
+GET  /api/desserts/:id       - Detalhes de uma sobremesa
+DELETE /api/desserts/:id     - Remover do histórico
+```
+
+### Usuário
+```
+GET  /api/users/profile  - Perfil completo
+GET  /api/users/credits  - Consultar créditos
+POST /api/users/upgrade  - Upgrade para Premium
+```
+
+### Admin
+```
+GET  /api/admin/stats        - Estatísticas
+GET  /api/admin/users        - Lista usuários
+PUT  /api/admin/users/:id/credits - Atualizar créditos
+```
+
+## 🎨 Prompts de IA
+
+### Texto (Receita)
+```
+Crie uma sobremesa infantil mágica usando: {INGREDIENTES}.
+- Nome criativo baseado em doce real
+- Receita em 3 passos simples
+```
+
+### Imagem (Personagem 3D)
+```
+A charismatic 3D anthropomorphic character inspired by "{NOME}".
+Dessert-shaped body, Disney-Pixar style.
+Big joyful eyes, candy magical background.
+```
+
+## 🔐 Segurança
+
+- Senhas hasheadas com bcrypt (10 rounds)
+- JWT para autenticação
+- Rate limiting por IP e usuário
+- Validação de inputs com express-validator
+- Device ID para prevenir múltiplas contas
+- Helmet + CORS configurados
+
+## 💰 Otimização de Custos
+
+- Cache LRU em memória + SQLite
+- Limite de tamanho de prompt (500 chars)
+- Fallback para mock em desenvolvimento
+- Logs detalhados de uso
+
+## 🚀 Deploy
+
+### Backend (Railway/Render)
+1. Configure variáveis de ambiente
+2. Deploy via Git
+3. Configure PostgreSQL em produção
+
+### Mobile (EAS Build)
+```bash
+# Android
+eas build --platform android
+
+# iOS
+eas build --platform ios
+```
+
+## 👥 Usuários de Teste
+
+Após rodar `npm run seed`:
+
+| Email | Senha | Plano |
+|-------|-------|-------|
+| teste@email.com | teste123 | Free (3 créditos) |
+| premium@email.com | teste123 | Premium (100 créditos) |
+| admin@email.com | admin123 | Admin |
+
+## 📝 Licença
+
+MIT License
