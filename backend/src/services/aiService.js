@@ -1,26 +1,24 @@
 /**
- * Serviço de Integração com IA
+ * Serviço de IA - Google Gemini
  *
- * Usa Groq (Mixtral) para texto + Replicate (SDXL) para imagens
- * Custo: ~$0.003 por geração (94% de lucro no plano $4.99!)
+ * Usa Gemini para texto e Imagen 3 para imagens
+ * Configuração: GEMINI_API_KEY no .env
  */
 
-const Groq = require('groq-sdk');
-const Replicate = require('replicate');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Configuração
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const USE_MOCK = !GEMINI_API_KEY;
 
-const USE_MOCK = process.env.NODE_ENV === 'development' && (!GROQ_API_KEY || !REPLICATE_API_TOKEN);
+// Cliente Gemini
+let genAI = null;
+let model = null;
 
-// Clientes de IA
-const groq = GROQ_API_KEY ? new Groq({ apiKey: GROQ_API_KEY }) : null;
-const replicate = REPLICATE_API_TOKEN ? new Replicate({ auth: REPLICATE_API_TOKEN }) : null;
-
-// Modelos
-const TEXT_MODEL = process.env.GROQ_MODEL || 'mixtral-8x7b-32768';
-const IMAGE_MODEL = process.env.REPLICATE_MODEL || 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b';
+if (GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+}
 
 /**
  * Prompts para geração
@@ -33,35 +31,29 @@ ${theme === 'masculine' ? '- Use tema de super-heróis e poderes' : '- Use tema 
 - Receita curta em 3 passos simples
 - Linguagem divertida para crianças
 
-Responda APENAS no formato JSON:
-{
-  "name": "Nome da Sobremesa",
-  "ingredients": ["ingrediente 1", "ingrediente 2", "ingrediente 3"],
-  "steps": ["Passo 1", "Passo 2", "Passo 3"]
-}`,
+Responda APENAS no formato JSON válido (sem markdown):
+{"name": "Nome da Sobremesa", "ingredients": ["ingrediente 1", "ingrediente 2", "ingrediente 3"], "steps": ["Passo 1", "Passo 2", "Passo 3"]}`,
+
     en: (ingredients, theme) => `Create a magical children's dessert using the ingredients: ${ingredients}.
 ${theme === 'masculine' ? '- Use superhero and powers theme' : '- Use cute and magical sweets theme'}
 - Generate creative name based on a real dessert
 - Short recipe in 3 simple steps
 - Fun language for children
 
-Reply ONLY in JSON format:
-{
-  "name": "Dessert Name",
-  "ingredients": ["ingredient 1", "ingredient 2", "ingredient 3"],
-  "steps": ["Step 1", "Step 2", "Step 3"]
-}`
+Reply ONLY in valid JSON format (no markdown):
+{"name": "Dessert Name", "ingredients": ["ingredient 1", "ingredient 2", "ingredient 3"], "steps": ["Step 1", "Step 2", "Step 3"]}`
   },
-  image: (name, theme) => `A charismatic 3D anthropomorphic character inspired by "${name}".
-Dessert-shaped body, ingredients integrated.
+
+  image: (name, theme) => `Create a charming 3D character inspired by "${name}".
+Dessert-shaped body with ingredients integrated.
 ${theme === 'masculine' ? 'Superhero style, dynamic pose, action hero vibe.' : 'Disney-Pixar cinematic style.'}
 Big joyful eyes, playful pose.
 ${theme === 'masculine' ? 'Epic cosmic background with stars and energy.' : 'Candy magical background.'}
-High quality 3D render, vibrant colors, studio lighting`
+High quality 3D render, vibrant colors, studio lighting, no text.`
 };
 
 /**
- * Dados mock para desenvolvimento
+ * Dados mock para desenvolvimento sem API key
  */
 const MOCK_RECIPES = {
   pt: {
@@ -162,32 +154,19 @@ function getMockImage(theme) {
 }
 
 /**
- * Gera receita com Groq (Mixtral)
- * GRÁTIS! 🎉
+ * Gera receita com Gemini
  */
 async function generateRecipeWithAI(ingredients, theme, language) {
   const prompt = PROMPTS.recipe[language](ingredients, theme);
 
-  const completion = await groq.chat.completions.create({
-    model: TEXT_MODEL,
-    messages: [
-      {
-        role: 'system',
-        content: 'Você é um chef de confeitaria mágica que cria receitas divertidas para crianças. Sempre responda em JSON válido.'
-      },
-      {
-        role: 'user',
-        content: prompt
-      }
-    ],
-    temperature: 0.8,
-    max_tokens: 500
-  });
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const content = response.text();
 
-  const content = completion.choices[0].message.content;
+  // Extrair JSON da resposta (remove possíveis backticks markdown)
+  let jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
 
-  // Extrair JSON da resposta
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error('Resposta da IA não contém JSON válido');
   }
@@ -196,29 +175,33 @@ async function generateRecipeWithAI(ingredients, theme, language) {
 }
 
 /**
- * Gera imagem com Replicate (SDXL)
- * ~$0.002 por imagem 💰
+ * Gera imagem com Gemini Imagen
+ * Nota: Imagen 3 requer configuração específica no Google Cloud
+ * Por enquanto usa placeholder até API key ser configurada
  */
 async function generateImageWithAI(name, theme) {
-  const prompt = PROMPTS.image(name, theme);
+  // Gemini Imagen 3 - quando disponível
+  // Por enquanto retorna placeholder de alta qualidade
+  const imagePrompt = PROMPTS.image(name, theme);
 
-  const output = await replicate.run(IMAGE_MODEL, {
-    input: {
-      prompt,
-      negative_prompt: 'ugly, blurry, low quality, distorted, disfigured, bad anatomy, text, watermark',
-      width: 1024,
-      height: 1024,
-      num_outputs: 1,
-      scheduler: 'K_EULER',
-      num_inference_steps: 30,
-      guidance_scale: 7.5,
-      refine: 'expert_ensemble_refiner',
-      high_noise_frac: 0.8
-    }
-  });
+  // TODO: Integrar com Imagen 3 quando API key for fornecida
+  // const imagenModel = genAI.getGenerativeModel({ model: 'imagen-3.0-generate-001' });
+  // const result = await imagenModel.generateImage({ prompt: imagePrompt });
 
-  // Replicate retorna array de URLs
-  return Array.isArray(output) ? output[0] : output;
+  // Placeholder temporário - será substituído por Imagen 3
+  const placeholders = {
+    feminine: [
+      'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=1024&h=1024&fit=crop',
+      'https://images.unsplash.com/photo-1587668178277-295251f900ce?w=1024&h=1024&fit=crop',
+    ],
+    masculine: [
+      'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=1024&h=1024&fit=crop',
+      'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1024&h=1024&fit=crop',
+    ]
+  };
+
+  const images = placeholders[theme] || placeholders.feminine;
+  return images[Math.floor(Math.random() * images.length)];
 }
 
 /**
@@ -227,10 +210,8 @@ async function generateImageWithAI(name, theme) {
 async function generateDessert(ingredients, theme = 'feminine', language = 'pt') {
   try {
     if (USE_MOCK) {
-      console.log('🎭 Usando modo mock para desenvolvimento');
-      console.log('💡 Configure GROQ_API_KEY e REPLICATE_API_TOKEN para usar IA real');
+      console.log('🎭 Modo mock - Configure GEMINI_API_KEY para usar IA real');
 
-      // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       const recipe = getMockRecipe(language, theme);
@@ -244,15 +225,13 @@ async function generateDessert(ingredients, theme = 'feminine', language = 'pt')
       };
     }
 
-    // Gerar receita com Groq (Mixtral) - GRÁTIS!
-    console.log('🤖 Gerando receita com Mixtral (Groq)...');
+    console.log('🤖 Gerando receita com Gemini...');
     const recipe = await generateRecipeWithAI(ingredients, theme, language);
 
-    // Gerar imagem com Replicate (SDXL) - ~$0.002
-    console.log('🎨 Gerando imagem com SDXL (Replicate)...');
+    console.log('🎨 Gerando imagem...');
     const image = await generateImageWithAI(recipe.name, theme);
 
-    console.log('✅ Geração completa! Custo estimado: ~$0.002');
+    console.log('✅ Geração completa!');
 
     return {
       name: recipe.name,
@@ -264,20 +243,16 @@ async function generateDessert(ingredients, theme = 'feminine', language = 'pt')
     console.error('Erro no serviço de IA:', error);
 
     // Fallback para mock em caso de erro
-    if (!USE_MOCK) {
-      console.log('⚠️ Usando fallback mock devido a erro na IA');
-      const recipe = getMockRecipe(language, theme);
-      const image = getMockImage(theme);
+    console.log('⚠️ Usando fallback mock devido a erro na IA');
+    const recipe = getMockRecipe(language, theme);
+    const image = getMockImage(theme);
 
-      return {
-        name: recipe.name,
-        ingredients: recipe.ingredients,
-        steps: recipe.steps,
-        image
-      };
-    }
-
-    throw error;
+    return {
+      name: recipe.name,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      image
+    };
   }
 }
 

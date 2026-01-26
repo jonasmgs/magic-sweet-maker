@@ -1,35 +1,39 @@
 /**
- * Tema e Cores do App
+ * Tema Pixar/Disney - Cores vibrantes e mágicas
  */
 
 export const colors = {
-  // Tema feminino (doces)
+  // Tema feminino (Doces Mágicos 🧁)
   feminine: {
-    primary: '#FF69B4',
+    primary: '#FF6B9D',
     secondary: '#FFB6C1',
     accent: '#FF1493',
-    background: '#FFF0F5',
+    background: '#FFF5F8',
     card: '#FFFFFF',
     text: '#333333',
-    textSecondary: '#666666',
+    textSecondary: '#6B7280',
     success: '#4CAF50',
     error: '#F44336',
     warning: '#FFC107',
-    gradient: ['#FF69B4', '#FF1493', '#FFB6C1'],
+    gradient: ['#FF6B9D', '#FFA07A', '#FFB6C1'],
+    gradientAlt: ['#667EEA', '#764BA2'],
+    gradientCool: ['#48C6EF', '#6F86D6'],
   },
-  // Tema masculino (super-heróis)
+  // Tema masculino (Super-Heróis ⚡)
   masculine: {
-    primary: '#4169E1',
-    secondary: '#6A5ACD',
-    accent: '#FF4500',
-    background: '#1A1A2E',
-    card: '#16213E',
+    primary: '#667EEA',
+    secondary: '#764BA2',
+    accent: '#FF6B35',
+    background: '#0F0F1A',
+    card: '#1A1A2E',
     text: '#FFFFFF',
-    textSecondary: '#B0B0B0',
-    success: '#4CAF50',
-    error: '#F44336',
-    warning: '#FFC107',
-    gradient: ['#4169E1', '#6A5ACD', '#FF4500'],
+    textSecondary: '#A0AEC0',
+    success: '#48BB78',
+    error: '#F56565',
+    warning: '#ECC94B',
+    gradient: ['#667EEA', '#764BA2', '#6B8DD6'],
+    gradientAlt: ['#FF6B35', '#F7931E'],
+    gradientCool: ['#00D9FF', '#00FF94'],
   },
 };
 
@@ -43,7 +47,7 @@ export const fonts = {
     lg: 20,
     xl: 24,
     xxl: 32,
-    title: 40,
+    title: 42,
   },
 };
 
@@ -57,36 +61,77 @@ export const spacing = {
 };
 
 export const borderRadius = {
-  sm: 8,
-  md: 16,
-  lg: 24,
+  sm: 12,
+  md: 20,
+  lg: 30,
   full: 9999,
 };
 
+// Sombras coloridas estilo Pixar
 export const shadows = {
   sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: '#000',
+    shadowColor: '#667EEA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
   },
-  lg: {
-    shadowColor: '#000',
+  md: {
+    shadowColor: '#FF6B9D',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
     elevation: 8,
+  },
+  lg: {
+    shadowColor: '#667EEA',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+};
+
+// Sombras por tema
+export const themeShadows = {
+  feminine: {
+    primary: {
+      shadowColor: '#FF6B9D',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 15,
+      elevation: 10,
+    },
+    card: {
+      shadowColor: '#FF6B9D',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.2,
+      shadowRadius: 20,
+      elevation: 15,
+    },
+  },
+  masculine: {
+    primary: {
+      shadowColor: '#667EEA',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 15,
+      elevation: 10,
+    },
+    card: {
+      shadowColor: '#764BA2',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.2,
+      shadowRadius: 20,
+      elevation: 15,
+    },
   },
 };
 
 export function getThemeColors(theme: 'feminine' | 'masculine') {
   return colors[theme];
+}
+
+export function getThemeShadows(theme: 'feminine' | 'masculine') {
+  return themeShadows[theme];
 }

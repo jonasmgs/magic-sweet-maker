@@ -1,5 +1,5 @@
 /**
- * Componente de Botão Customizado
+ * Componente de Botão - Estilo Pixar/Disney
  */
 
 import React from 'react';
@@ -13,14 +13,14 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../context/LanguageContext';
-import { getThemeColors, borderRadius, spacing, fonts, shadows } from '../utils/theme';
+import { getThemeColors, getThemeShadows, borderRadius, spacing, fonts } from '../utils/theme';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'cool';
   size?: 'sm' | 'md' | 'lg';
   icon?: string;
   style?: ViewStyle;
@@ -40,11 +40,12 @@ export function Button({
 }: ButtonProps) {
   const { theme } = useLanguage();
   const themeColors = getThemeColors(theme);
+  const themeShadows = getThemeShadows(theme);
 
   const sizeStyles = {
-    sm: { paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
-    md: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg },
-    lg: { paddingVertical: spacing.lg, paddingHorizontal: spacing.xl },
+    sm: { paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.md },
+    md: { paddingVertical: spacing.md + 2, paddingHorizontal: spacing.lg },
+    lg: { paddingVertical: spacing.lg - 4, paddingHorizontal: spacing.xl },
   };
 
   const fontSizes = {
@@ -55,42 +56,24 @@ export function Button({
 
   const isDisabled = disabled || loading;
 
-  if (variant === 'primary') {
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={isDisabled}
-        activeOpacity={0.8}
-        style={[{ opacity: isDisabled ? 0.6 : 1 }, style]}
-      >
-        <LinearGradient
-          colors={themeColors.gradient as [string, string, ...string[]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[
-            styles.button,
-            sizeStyles[size],
-            shadows.md,
-          ]}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={[styles.buttonText, { fontSize: fontSizes[size] }, textStyle]}>
-              {icon} {title}
-            </Text>
-          )}
-        </LinearGradient>
-      </TouchableOpacity>
-    );
-  }
+  // Gradient colors based on variant
+  const getGradientColors = () => {
+    switch (variant) {
+      case 'secondary':
+        return themeColors.gradientAlt as [string, string];
+      case 'cool':
+        return themeColors.gradientCool as [string, string];
+      default:
+        return themeColors.gradient as [string, string, ...string[]];
+    }
+  };
 
   if (variant === 'outline') {
     return (
       <TouchableOpacity
         onPress={onPress}
         disabled={isDisabled}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
         style={[
           styles.button,
           styles.outlineButton,
@@ -114,22 +97,30 @@ export function Button({
     <TouchableOpacity
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
       style={[
-        styles.button,
-        { backgroundColor: themeColors.secondary, opacity: isDisabled ? 0.6 : 1 },
-        sizeStyles[size],
-        shadows.sm,
+        { opacity: isDisabled ? 0.6 : 1 },
+        themeShadows.primary,
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={themeColors.text} />
-      ) : (
-        <Text style={[styles.buttonText, { color: themeColors.text, fontSize: fontSizes[size] }, textStyle]}>
-          {icon} {title}
-        </Text>
-      )}
+      <LinearGradient
+        colors={getGradientColors()}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.button,
+          sizeStyles[size],
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator color="#FFFFFF" size={size === 'lg' ? 'small' : 'small'} />
+        ) : (
+          <Text style={[styles.buttonText, { fontSize: fontSizes[size] }, textStyle]}>
+            {icon ? `${icon} ` : ''}{title}
+          </Text>
+        )}
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
@@ -143,15 +134,16 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontWeight: '800',
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   outlineButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
   },
   outlineText: {
-    fontWeight: 'bold',
+    fontWeight: '700',
     textAlign: 'center',
   },
 });
