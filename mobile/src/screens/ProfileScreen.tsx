@@ -80,7 +80,7 @@ export function ProfileScreen() {
 
   return (
     <LinearGradient
-      colors={isMasculine ? ['#1A1A2E', '#16213E'] : ['#FFF0F5', '#FFE4E1']}
+      colors={isMasculine ? ['#0F0F1A', '#1A1A2E', '#16213E'] : ['#87CEEB', '#E0F6FF', '#FFF5E1']}
       style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
