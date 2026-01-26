@@ -84,7 +84,7 @@ export function AuthScreen() {
 
   return (
     <LinearGradient
-      colors={themeColors.gradient as [string, string, ...string[]]}
+      colors={isMasculine ? ['#0F0F1A', '#1A1A2E', '#16213E'] : ['#FF6B9D', '#FFA07A', '#FFB6C1']}
       style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
@@ -273,8 +273,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fonts.sizes.title,
-    fontWeight: 'bold',
+    fontWeight: '900',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 10,
+    letterSpacing: 2,
   },
   subtitle: {
     fontSize: fonts.sizes.md,

@@ -46,7 +46,7 @@ export function ResultScreen() {
 
   return (
     <LinearGradient
-      colors={isMasculine ? ['#1A1A2E', '#16213E'] : ['#FFF0F5', '#FFE4E1']}
+      colors={isMasculine ? ['#0F0F1A', '#1A1A2E', '#16213E'] : ['#87CEEB', '#E0F6FF', '#FFF5E1']}
       style={styles.gradient}
     >
       <SafeAreaView style={styles.container}>
@@ -200,10 +200,14 @@ const styles = StyleSheet.create({
     fontSize: 32,
   },
   dessertName: {
-    fontSize: fonts.sizes.xxl,
-    fontWeight: 'bold',
+    fontSize: fonts.sizes.title,
+    fontWeight: '900',
     textAlign: 'center',
     marginBottom: spacing.lg,
+    textShadowColor: 'rgba(255, 107, 157, 0.3)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 10,
+    letterSpacing: 1,
   },
   imageContainer: {
     width: width - spacing.lg * 2,
