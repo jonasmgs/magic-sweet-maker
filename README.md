@@ -1,146 +1,131 @@
-# 🍭 Magic Sweet Maker - Gerador de Sobremesas Mágicas Infantis
+# 🍭 Magic Sweet Maker
 
-Aplicativo completo para gerar sobremesas mágicas infantis usando IA, com:
-- **Web App**: React + Vite + Supabase (raiz do projeto)
-- **Backend**: Node.js + Express (pasta `/backend`)
-- **Mobile**: React Native + Expo (pasta `/mobile`)
+Gerador de Sobremesas Mágicas Infantis com IA - App React Native + API Node.js
 
-## 📁 Estrutura do Projeto
+## ✨ Funcionalidades
+
+- 🤖 **Geração com IA**: Receitas criativas usando Google Gemini
+- 🖼️ **Imagens Mágicas**: Personagens 3D estilo Pixar/Disney
+- 👶 **Para Crianças**: Interface divertida e segura
+- 🎭 **2 Temas**: Doces Fofos 🧁 ou Super-Heróis ⚡
+- 🌍 **Bilíngue**: Português e Inglês
+- 💳 **Sistema de Créditos**: Free (3) ou Premium (100)
+- 🔐 **Autenticação JWT**: Login seguro com refresh tokens
+- 📱 **100% Nativo**: Android e iOS com React Native/Expo
+
+## 📁 Estrutura
 
 ```
 magic-sweet-maker/
-├── src/                        # Web App (React + Vite)
-├── backend/                    # API Node.js/Express
+├── backend/              # API Node.js/Express
 │   ├── src/
-│   │   ├── config/            # Configurações (DB, JWT)
-│   │   ├── controllers/       # Controladores das rotas
-│   │   ├── middleware/        # Auth, rate limit, etc
-│   │   ├── models/            # Models do banco de dados
-│   │   ├── routes/            # Definição das rotas
-│   │   ├── services/          # Serviços (AI, Cache, Credits)
-│   │   └── utils/             # Utilitários
-│   ├── package.json
-│   └── .env.example
-├── mobile/                     # App React Native (Expo)
-│   ├── src/
-│   │   ├── components/        # Componentes reutilizáveis
-│   │   ├── screens/           # Telas do app
-│   │   ├── services/          # APIs e serviços
-│   │   ├── context/           # Context API
-│   │   └── utils/             # Utilitários
-│   ├── App.tsx
+│   │   ├── config/       # Database, migrations
+│   │   ├── controllers/  # Auth, Desserts, Users, Admin
+│   │   ├── middleware/   # Auth, Rate Limiter, Validation
+│   │   ├── models/       # User, Dessert, UsageLog
+│   │   ├── routes/       # API routes
+│   │   ├── services/     # AI (Gemini), Cache, Credits
+│   │   └── server.js
 │   └── package.json
-└── README.md
+│
+└── mobile/               # App React Native/Expo
+    ├── src/
+    │   ├── components/   # Button, Input, LoadingAnimation
+    │   ├── context/      # Auth, Language/Theme
+    │   ├── screens/      # Auth, Home, Generation, Result, Profile, History
+    │   ├── services/     # API client (Axios)
+    │   └── utils/        # Theme (Pixar/Disney style)
+    ├── App.tsx
+    └── package.json
 ```
 
-## 🚀 Funcionalidades
+## 🚀 Como Executar
 
-### Autenticação
-- ✅ Cadastro por email e senha
-- ✅ Login seguro com JWT
-- ✅ Persistência de sessão
-- ✅ Prevenção de múltiplas contas por dispositivo
-
-### Sistema de Planos
-- ✅ **Modo Grátis**: 3 créditos iniciais
-- ✅ **Premium**: 100 créditos/mês com renovação automática
-
-### Sistema de Créditos
-- ✅ Cada geração consome 1 crédito
-- ✅ Bloqueio quando créditos acabam
-- ✅ Dashboard de uso
-
-### Geração com IA
-- ✅ Geração de receita com IA de texto
-- ✅ Geração de personagem 3D com IA de imagem
-- ✅ Cache de resultados para otimização
-- ✅ Logs de uso por usuário
-- ✅ Temas: Doces Fofos 🧁 e Super-Heróis 🦸
-
-## 🛠️ Instalação
-
-### Pré-requisitos
-- Node.js 18+
-- npm ou yarn
-- Expo CLI (para mobile)
-
-### 1. Web App (Raiz)
-
-```bash
-# Instalar dependências
-npm install
-
-# Iniciar desenvolvimento
-npm run dev
-```
-
-### 2. Backend
+### Backend
 
 ```bash
 cd backend
-npm install
-
-# Configurar variáveis de ambiente
 cp .env.example .env
-# Edite o .env com suas configurações
+# Edite .env e adicione sua GEMINI_API_KEY
 
-# Rodar migrations
+npm install
 npm run migrate
-
-# Seed com dados de teste
 npm run seed
-
-# Iniciar servidor
 npm run dev
 ```
 
-### 3. Mobile (Expo)
+### Mobile
 
 ```bash
 cd mobile
 npm install
-
-# Iniciar com Expo
 npx expo start
 
 # Android
-npx expo run:android
+npx expo start --android
 
 # iOS
-npx expo run:ios
+npx expo start --ios
 ```
 
-## 🔧 Variáveis de Ambiente
+## ⚙️ Variáveis de Ambiente
 
-### Backend (.env)
+Crie um arquivo `backend/.env`:
+
 ```env
+# Servidor
 PORT=3000
 NODE_ENV=development
 
-JWT_SECRET=sua-chave-secreta
+# JWT (gere uma chave segura!)
+JWT_SECRET=sua-chave-super-secreta-aqui
 JWT_EXPIRES_IN=7d
+JWT_REFRESH_EXPIRES_IN=30d
 
+# Banco de Dados
 DATABASE_PATH=./database.sqlite
 
-OPENAI_API_KEY=sk-sua-api-key
-OPENAI_TEXT_MODEL=gpt-4
-OPENAI_IMAGE_MODEL=dall-e-3
+# Google Gemini API
+GEMINI_API_KEY=sua-api-key-do-gemini
 
+# Sistema de Créditos
 FREE_CREDITS=3
 PREMIUM_CREDITS=100
+CREDIT_RENEWAL_DAYS=30
+
+# Cache
+CACHE_MAX_SIZE=500
+CACHE_TTL_SECONDS=86400
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=10
 ```
 
-### Mobile
-Configure em `mobile/src/services/api.ts` a URL do backend.
+### Obter API Key do Gemini
 
-## 📱 Telas do App Mobile
+1. Acesse: https://aistudio.google.com/apikey
+2. Crie uma nova API key
+3. Adicione no arquivo `.env`
 
-1. **Login/Cadastro** - Autenticação com troca de tema/idioma
-2. **Home** - Seleção de ingredientes com sugestões
-3. **Geração** - Loading animado com varinha mágica ✨
-4. **Resultado** - Receita completa + imagem do personagem
-5. **Histórico** - Lista de sobremesas criadas
-6. **Perfil** - Créditos, plano e configurações
+## 📱 Telas do App
+
+| Tela | Descrição |
+|------|-----------|
+| **Auth** | Login/Cadastro com seleção de tema e idioma |
+| **Home** | Seleção de ingredientes com sugestões populares |
+| **Generation** | Animação de varinha mágica durante geração |
+| **Result** | Receita com imagem do personagem 3D |
+| **Profile** | Créditos, plano, configurações |
+| **History** | Histórico de sobremesas criadas |
+
+## 🎨 Design Pixar/Disney
+
+- **Gradientes vibrantes**: Céu azul → Rosa → Dourado
+- **Sombras coloridas**: Efeito glow rosa/roxo
+- **Bordas arredondadas**: Estilo suave e amigável
+- **Fontes bold**: Peso 800-900 para títulos
+- **Text shadows**: Profundidade 3D nos títulos
 
 ## 📊 API Endpoints
 
@@ -155,73 +140,29 @@ POST /api/auth/logout   - Logout
 
 ### Sobremesas
 ```
-POST /api/desserts/generate  - Gerar sobremesa (consome 1 crédito)
-GET  /api/desserts/history   - Histórico do usuário
-GET  /api/desserts/:id       - Detalhes de uma sobremesa
-DELETE /api/desserts/:id     - Remover do histórico
+POST /api/desserts/generate  - Gerar sobremesa (1 crédito)
+GET  /api/desserts/history   - Histórico
+GET  /api/desserts/:id       - Detalhes
+DELETE /api/desserts/:id     - Remover
 ```
 
 ### Usuário
 ```
-GET  /api/users/profile  - Perfil completo
-GET  /api/users/credits  - Consultar créditos
-POST /api/users/upgrade  - Upgrade para Premium
+GET  /api/users/profile  - Perfil
+GET  /api/users/credits  - Créditos
+POST /api/users/upgrade  - Upgrade Premium
 ```
 
-### Admin
-```
-GET  /api/admin/stats        - Estatísticas
-GET  /api/admin/users        - Lista usuários
-PUT  /api/admin/users/:id/credits - Atualizar créditos
-```
+## 🔒 Segurança
 
-## 🎨 Prompts de IA
-
-### Texto (Receita)
-```
-Crie uma sobremesa infantil mágica usando: {INGREDIENTES}.
-- Nome criativo baseado em doce real
-- Receita em 3 passos simples
-```
-
-### Imagem (Personagem 3D)
-```
-A charismatic 3D anthropomorphic character inspired by "{NOME}".
-Dessert-shaped body, Disney-Pixar style.
-Big joyful eyes, candy magical background.
-```
-
-## 🔐 Segurança
-
-- Senhas hasheadas com bcrypt (10 rounds)
-- JWT para autenticação
-- Rate limiting por IP e usuário
-- Validação de inputs com express-validator
-- Device ID para prevenir múltiplas contas
-- Helmet + CORS configurados
-
-## 💰 Otimização de Custos
-
-- Cache LRU em memória + SQLite
-- Limite de tamanho de prompt (500 chars)
-- Fallback para mock em desenvolvimento
-- Logs detalhados de uso
-
-## 🚀 Deploy
-
-### Backend (Railway/Render)
-1. Configure variáveis de ambiente
-2. Deploy via Git
-3. Configure PostgreSQL em produção
-
-### Mobile (EAS Build)
-```bash
-# Android
-eas build --platform android
-
-# iOS
-eas build --platform ios
-```
+- ✅ Helmet.js para headers HTTP
+- ✅ Rate limiting global e por rota
+- ✅ CORS configurável
+- ✅ Bcrypt para senhas (12 rounds)
+- ✅ JWT com refresh tokens
+- ✅ Validação de ingredientes
+- ✅ Validação com express-validator
+- ✅ Proteção contra device fraud
 
 ## 👥 Usuários de Teste
 
@@ -233,6 +174,20 @@ Após rodar `npm run seed`:
 | premium@email.com | teste123 | Premium (100 créditos) |
 | admin@email.com | admin123 | Admin |
 
-## 📝 Licença
+## 🚀 Build para Produção
 
-MIT License
+### Android
+```bash
+cd mobile
+eas build --platform android
+```
+
+### iOS
+```bash
+cd mobile
+eas build --platform ios
+```
+
+## 📄 Licença
+
+MIT
