@@ -68,9 +68,9 @@ npx expo start --android
 npx expo start --ios
 ```
 
-## ⚙️ Configuração
+## ⚙️ Variáveis de Ambiente
 
-Crie um arquivo `.env` no backend:
+Crie um arquivo `backend/.env`:
 
 ```env
 # Servidor
@@ -82,6 +82,9 @@ JWT_SECRET=sua-chave-super-secreta-aqui
 JWT_EXPIRES_IN=7d
 JWT_REFRESH_EXPIRES_IN=30d
 
+# Banco de Dados
+DATABASE_PATH=./database.sqlite
+
 # Google Gemini API
 GEMINI_API_KEY=sua-api-key-do-gemini
 
@@ -89,6 +92,14 @@ GEMINI_API_KEY=sua-api-key-do-gemini
 FREE_CREDITS=3
 PREMIUM_CREDITS=100
 CREDIT_RENEWAL_DAYS=30
+
+# Cache
+CACHE_MAX_SIZE=500
+CACHE_TTL_SECONDS=86400
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=10
 ```
 
 ### Obter API Key do Gemini
