@@ -9,7 +9,7 @@ Gerador de Sobremesas Mágicas Infantis com IA - App React Native + API Node.js
 - 👶 **Para Crianças**: Interface divertida e segura
 - 🎭 **2 Temas**: Doces Fofos 🧁 ou Super-Heróis ⚡
 - 🌍 **Bilíngue**: Português e Inglês
-- 💳 **Sistema de Créditos**: Free (3) ou Premium (100)
+- 💳 **Sistema de Créditos**:  Premium (150)
 - 🔐 **Autenticação JWT**: Login seguro com refresh tokens
 - 📱 **100% Nativo**: Android e iOS com React Native/Expo
 
@@ -170,8 +170,7 @@ Após rodar `npm run seed`:
 
 | Email | Senha | Plano |
 |-------|-------|-------|
-| teste@email.com | teste123 | Free (3 créditos) |
-| premium@email.com | teste123 | Premium (100 créditos) |
+| premium@email.com | teste123 | Premium ( 150 créditos) |
 | admin@email.com | admin123 | Admin |
 
 ## 🚀 Build para Produção
