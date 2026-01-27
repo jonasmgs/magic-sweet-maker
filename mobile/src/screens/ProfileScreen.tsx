@@ -13,29 +13,33 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, SUPPORTED_LANGUAGES } from '../context/LanguageContext';
 import { userService } from '../services/api';
 import { Button } from '../components/Button';
 import { getThemeColors, fonts, spacing, borderRadius, shadows } from '../utils/theme';
 
 export function ProfileScreen() {
   const [upgrading, setUpgrading] = useState(false);
+  const navigation = useNavigation<any>();
   const { user, logout, refreshUser } = useAuth();
-  const { theme, t, language, setLanguage, setTheme } = useLanguage();
+  const { theme, t, language } = useLanguage();
   const themeColors = getThemeColors(theme);
   const isMasculine = theme === 'masculine';
 
+  const currentLanguage = SUPPORTED_LANGUAGES.find(l => l.code === language);
+
   const handleUpgrade = async () => {
     Alert.alert(
-      language === 'pt' ? 'Fazer Upgrade' : 'Upgrade',
+      t.upgrade,
       language === 'pt'
         ? 'Deseja fazer upgrade para o plano Premium? (Simulação)'
         : 'Do you want to upgrade to Premium plan? (Simulation)',
       [
-        { text: language === 'pt' ? 'Cancelar' : 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: language === 'pt' ? 'Confirmar' : 'Confirm',
+          text: t.confirm,
           onPress: async () => {
             setUpgrading(true);
             try {
@@ -49,7 +53,7 @@ export function ProfileScreen() {
               );
             } catch (error) {
               Alert.alert(
-                'Erro',
+                t.error,
                 language === 'pt' ? 'Erro ao fazer upgrade' : 'Error upgrading'
               );
             } finally {
@@ -66,7 +70,7 @@ export function ProfileScreen() {
       t.logout,
       language === 'pt' ? 'Deseja sair da conta?' : 'Do you want to logout?',
       [
-        { text: language === 'pt' ? 'Cancelar' : 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
           text: t.logout,
           style: 'destructive',
@@ -99,14 +103,14 @@ export function ProfileScreen() {
               <Text style={styles.avatarEmoji}>{isMasculine ? '🦸' : '🧁'}</Text>
             </View>
             <Text style={[styles.userName, { color: themeColors.text }]}>
-              {user?.name || user?.email?.split('@')[0] || 'Usuário'}
+              {user?.name || user?.email?.split('@')[0] || 'User'}
             </Text>
             <Text style={[styles.userEmail, { color: themeColors.textSecondary }]}>
               {user?.email}
             </Text>
             {isPremium && (
               <View style={[styles.premiumBadge, { backgroundColor: '#FFD700' }]}>
-                <Text style={styles.premiumBadgeText}>⭐ Premium</Text>
+                <Text style={styles.premiumBadgeText}>⭐ {t.premium}</Text>
               </View>
             )}
           </View>
@@ -114,7 +118,7 @@ export function ProfileScreen() {
           {/* Card de Créditos */}
           <View style={[styles.card, { backgroundColor: themeColors.card }, shadows.md]}>
             <View style={styles.cardRow}>
-              <View>
+              <View style={styles.cardItem}>
                 <Text style={[styles.cardLabel, { color: themeColors.textSecondary }]}>
                   {t.credits}
                 </Text>
@@ -122,7 +126,7 @@ export function ProfileScreen() {
                   ✨ {user?.credits || 0}
                 </Text>
               </View>
-              <View>
+              <View style={styles.cardItem}>
                 <Text style={[styles.cardLabel, { color: themeColors.textSecondary }]}>
                   {t.plan}
                 </Text>
@@ -143,66 +147,25 @@ export function ProfileScreen() {
             )}
           </View>
 
-          {/* Configurações */}
-          <View style={[styles.card, { backgroundColor: themeColors.card }, shadows.md]}>
-            <Text style={[styles.cardTitle, { color: themeColors.text }]}>
-              {language === 'pt' ? '⚙️ Configurações' : '⚙️ Settings'}
-            </Text>
-
-            {/* Idioma */}
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
-                {language === 'pt' ? 'Idioma' : 'Language'}
-              </Text>
-              <View style={styles.optionButtons}>
-                <TouchableOpacity
-                  onPress={() => setLanguage('pt')}
-                  style={[
-                    styles.optionButton,
-                    language === 'pt' && { backgroundColor: themeColors.primary + '30' },
-                  ]}
-                >
-                  <Text style={styles.optionText}>🇧🇷 PT</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setLanguage('en')}
-                  style={[
-                    styles.optionButton,
-                    language === 'en' && { backgroundColor: themeColors.primary + '30' },
-                  ]}
-                >
-                  <Text style={styles.optionText}>🇺🇸 EN</Text>
-                </TouchableOpacity>
+          {/* Card de Configurações */}
+          <TouchableOpacity
+            style={[styles.settingsCard, { backgroundColor: themeColors.card }, shadows.md]}
+            onPress={() => navigation.navigate('Settings')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.settingsRow}>
+              <Text style={styles.settingsIcon}>⚙️</Text>
+              <View style={styles.settingsInfo}>
+                <Text style={[styles.settingsTitle, { color: themeColors.text }]}>
+                  {t.settings}
+                </Text>
+                <Text style={[styles.settingsSubtitle, { color: themeColors.textSecondary }]}>
+                  {currentLanguage?.flag} {currentLanguage?.nativeName} • {isMasculine ? t.heroesTheme : t.sweetsTheme}
+                </Text>
               </View>
+              <Text style={[styles.arrow, { color: themeColors.textSecondary }]}>›</Text>
             </View>
-
-            {/* Tema */}
-            <View style={styles.settingRow}>
-              <Text style={[styles.settingLabel, { color: themeColors.text }]}>
-                {language === 'pt' ? 'Tema' : 'Theme'}
-              </Text>
-              <View style={styles.optionButtons}>
-                <TouchableOpacity
-                  onPress={() => setTheme('feminine')}
-                  style={[
-                    styles.optionButton,
-                    theme === 'feminine' && { backgroundColor: themeColors.primary + '30' },
-                  ]}
-                >
-                  <Text style={styles.optionText}>🧁 {language === 'pt' ? 'Doces' : 'Sweets'}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setTheme('masculine')}
-                  style={[
-                    styles.optionButton,
-                    theme === 'masculine' && { backgroundColor: themeColors.primary + '30' },
-                  ]}
-                >
-                  <Text style={styles.optionText}>🦸 {language === 'pt' ? 'Heróis' : 'Heroes'}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
+          </TouchableOpacity>
 
           {/* Botão de Logout */}
           <Button
@@ -288,6 +251,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
+  cardItem: {
+    alignItems: 'center',
+  },
   cardLabel: {
     fontSize: fonts.sizes.sm,
     marginBottom: spacing.xs,
@@ -296,36 +262,36 @@ const styles = StyleSheet.create({
     fontSize: fonts.sizes.xl,
     fontWeight: 'bold',
   },
-  cardTitle: {
-    fontSize: fonts.sizes.lg,
-    fontWeight: 'bold',
-    marginBottom: spacing.lg,
-  },
   upgradeButton: {
     marginTop: spacing.lg,
   },
-  settingRow: {
+  settingsCard: {
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  settingsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
   },
-  settingLabel: {
+  settingsIcon: {
+    fontSize: 28,
+    marginRight: spacing.md,
+  },
+  settingsInfo: {
+    flex: 1,
+  },
+  settingsTitle: {
     fontSize: fonts.sizes.md,
+    fontWeight: 'bold',
   },
-  optionButtons: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  optionButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-  },
-  optionText: {
+  settingsSubtitle: {
     fontSize: fonts.sizes.sm,
+    marginTop: 2,
+  },
+  arrow: {
+    fontSize: 24,
+    fontWeight: '300',
   },
   logoutButton: {
     marginBottom: spacing.xl,

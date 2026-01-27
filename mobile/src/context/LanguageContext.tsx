@@ -1,164 +1,140 @@
 /**
- * Contexto de Idioma
+ * Contexto de Idioma e Tema
  *
- * Gerencia idioma e tema da aplicação.
+ * Gerencia idioma (12 idiomas suportados) e tema da aplicação.
+ * Suporta RTL (right-to-left) para árabe.
  */
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { I18nManager } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import * as Localization from 'expo-localization';
+import {
+  Language,
+  Translations,
+  translations,
+  SUPPORTED_LANGUAGES,
+  isRTL,
+} from '../i18n/translations';
 
-type Language = 'pt' | 'en';
-type Theme = 'feminine' | 'masculine';
-
-interface Translations {
-  title: string;
-  subtitle: string;
-  inputPlaceholder: string;
-  buttonText: string;
-  loadingText: string;
-  errorTitle: string;
-  errorMessage: string;
-  tryAgain: string;
-  createAnother: string;
-  recipeTitle: string;
-  ingredientsTitle: string;
-  stepsTitle: string;
-  safetyWarning: string;
-  login: string;
-  register: string;
-  email: string;
-  password: string;
-  name: string;
-  noAccount: string;
-  haveAccount: string;
-  profile: string;
-  credits: string;
-  plan: string;
-  premium: string;
-  free: string;
-  upgrade: string;
-  logout: string;
-  history: string;
-  home: string;
-  creditsLeft: string;
-  noCredits: string;
-  askAdult: string;
-}
-
-const translations: Record<Language, Translations> = {
-  pt: {
-    title: 'Doce Mágico',
-    subtitle: 'Crie receitas deliciosas com a magia da IA! ✨',
-    inputPlaceholder: 'Digite os ingredientes (ex: chocolate, morango)',
-    buttonText: 'Criar Meu Doce! 🪄',
-    loadingText: 'Criando sua magia doce...',
-    errorTitle: 'Ops! Algo deu errado 😅',
-    errorMessage: 'Não conseguimos criar seu doce agora. Tente novamente!',
-    tryAgain: 'Tentar Novamente',
-    createAnother: 'Criar Outro Doce! 🍰',
-    recipeTitle: 'Receita Mágica',
-    ingredientsTitle: '🧁 Ingredientes',
-    stepsTitle: '👩‍🍳 Como Fazer',
-    safetyWarning: '⚠️ Peça ajuda de um adulto para preparar!',
-    login: 'Entrar',
-    register: 'Criar Conta',
-    email: 'Email',
-    password: 'Senha',
-    name: 'Nome',
-    noAccount: 'Não tem conta? Cadastre-se',
-    haveAccount: 'Já tem conta? Entre',
-    profile: 'Perfil',
-    credits: 'Créditos',
-    plan: 'Plano',
-    premium: 'Premium',
-    free: 'Grátis',
-    upgrade: 'Fazer Upgrade',
-    logout: 'Sair',
-    history: 'Histórico',
-    home: 'Início',
-    creditsLeft: 'créditos restantes',
-    noCredits: 'Os créditos mágicos acabaram!',
-    askAdult: 'Peça para um adulto carregar mais créditos!',
-  },
-  en: {
-    title: 'Sweet Magic',
-    subtitle: 'Create delicious recipes with AI magic! ✨',
-    inputPlaceholder: 'Type ingredients (e.g., chocolate, strawberry)',
-    buttonText: 'Create My Sweet! 🪄',
-    loadingText: 'Creating your sweet magic...',
-    errorTitle: 'Oops! Something went wrong 😅',
-    errorMessage: "We couldn't create your sweet right now. Try again!",
-    tryAgain: 'Try Again',
-    createAnother: 'Create Another Sweet! 🍰',
-    recipeTitle: 'Magic Recipe',
-    ingredientsTitle: '🧁 Ingredients',
-    stepsTitle: '👩‍🍳 How to Make',
-    safetyWarning: '⚠️ Ask an adult for help to prepare!',
-    login: 'Login',
-    register: 'Sign Up',
-    email: 'Email',
-    password: 'Password',
-    name: 'Name',
-    noAccount: "Don't have an account? Sign up",
-    haveAccount: 'Already have an account? Log in',
-    profile: 'Profile',
-    credits: 'Credits',
-    plan: 'Plan',
-    premium: 'Premium',
-    free: 'Free',
-    upgrade: 'Upgrade',
-    logout: 'Logout',
-    history: 'History',
-    home: 'Home',
-    creditsLeft: 'credits left',
-    noCredits: 'Magic credits ran out!',
-    askAdult: 'Ask an adult to add more credits!',
-  },
-};
+export type Theme = 'feminine' | 'masculine';
 
 interface LanguageContextType {
   language: Language;
-  setLanguage: (lang: Language) => void;
+  setLanguage: (lang: Language) => Promise<void>;
   theme: Theme;
-  setTheme: (theme: Theme) => void;
+  setTheme: (theme: Theme) => Promise<void>;
   t: Translations;
+  isRtl: boolean;
+  supportedLanguages: typeof SUPPORTED_LANGUAGES;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+/**
+ * Detecta o idioma do dispositivo e retorna o mais próximo suportado
+ */
+function detectDeviceLanguage(): Language {
+  try {
+    const deviceLocale = Localization.locale?.split('-')[0]?.toLowerCase();
+    const supportedCodes = SUPPORTED_LANGUAGES.map(l => l.code);
+
+    if (deviceLocale && supportedCodes.includes(deviceLocale as Language)) {
+      return deviceLocale as Language;
+    }
+
+    // Fallback para inglês
+    return 'en';
+  } catch {
+    return 'en';
+  }
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('pt');
+  const [language, setLanguageState] = useState<Language>('en');
   const [theme, setThemeState] = useState<Theme>('feminine');
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Carregar preferências salvas na inicialização
+  useEffect(() => {
+    loadPreferences();
+  }, []);
+
+  const loadPreferences = async () => {
+    try {
+      const [savedLang, savedTheme] = await Promise.all([
+        SecureStore.getItemAsync('language'),
+        SecureStore.getItemAsync('theme'),
+      ]);
+
+      if (savedLang && SUPPORTED_LANGUAGES.some(l => l.code === savedLang)) {
+        setLanguageState(savedLang as Language);
+        updateRTL(savedLang as Language);
+      } else {
+        // Detectar idioma do dispositivo na primeira execução
+        const detectedLang = detectDeviceLanguage();
+        setLanguageState(detectedLang);
+        updateRTL(detectedLang);
+      }
+
+      if (savedTheme === 'feminine' || savedTheme === 'masculine') {
+        setThemeState(savedTheme);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar preferências:', error);
+    } finally {
+      setIsInitialized(true);
+    }
+  };
+
+  const updateRTL = (lang: Language) => {
+    const shouldBeRTL = isRTL(lang);
+    if (I18nManager.isRTL !== shouldBeRTL) {
+      I18nManager.allowRTL(shouldBeRTL);
+      I18nManager.forceRTL(shouldBeRTL);
+      // Nota: Mudança de RTL requer reinício do app
+    }
+  };
 
   const setLanguage = async (lang: Language) => {
-    setLanguageState(lang);
-    await SecureStore.setItemAsync('language', lang);
+    try {
+      setLanguageState(lang);
+      updateRTL(lang);
+      await SecureStore.setItemAsync('language', lang);
+    } catch (error) {
+      console.error('Erro ao salvar idioma:', error);
+    }
   };
 
   const setTheme = async (newTheme: Theme) => {
-    setThemeState(newTheme);
-    await SecureStore.setItemAsync('theme', newTheme);
+    try {
+      setThemeState(newTheme);
+      await SecureStore.setItemAsync('theme', newTheme);
+    } catch (error) {
+      console.error('Erro ao salvar tema:', error);
+    }
   };
 
-  // Carregar preferências salvas
-  React.useEffect(() => {
-    (async () => {
-      const savedLang = await SecureStore.getItemAsync('language');
-      const savedTheme = await SecureStore.getItemAsync('theme');
-      if (savedLang) setLanguageState(savedLang as Language);
-      if (savedTheme) setThemeState(savedTheme as Theme);
-    })();
-  }, []);
-
-  const value = {
+  const value: LanguageContextType = {
     language,
     setLanguage,
     theme,
     setTheme,
     t: translations[language],
+    isRtl: isRTL(language),
+    supportedLanguages: SUPPORTED_LANGUAGES,
   };
 
-  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+  // Aguardar inicialização para evitar flash de idioma errado
+  if (!isInitialized) {
+    return null;
+  }
+
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
 }
 
 export function useLanguage() {
@@ -168,3 +144,7 @@ export function useLanguage() {
   }
   return context;
 }
+
+// Re-exportar tipos úteis
+export type { Language, Translations };
+export { SUPPORTED_LANGUAGES, translations };

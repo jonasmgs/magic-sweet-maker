@@ -2,6 +2,7 @@
  * Modal de Paywall - Assinatura Premium
  *
  * Segue o tema do app (Doces 🧁 ou Heróis ⚡)
+ * Suporta todos os 12 idiomas do app
  */
 
 import React from 'react';
@@ -11,15 +12,12 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
-  Dimensions,
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLanguage } from '../context/LanguageContext';
 import { getThemeColors, getThemeShadows, fonts, spacing, borderRadius } from '../utils/theme';
 import { Button } from './Button';
-
-const { width, height } = Dimensions.get('window');
 
 interface PaywallModalProps {
   visible: boolean;
@@ -29,72 +27,36 @@ interface PaywallModalProps {
 }
 
 export function PaywallModal({ visible, onClose, onSubscribe, loading }: PaywallModalProps) {
-  const { theme, language } = useLanguage();
+  const { theme, t } = useLanguage();
   const themeColors = getThemeColors(theme);
   const themeShadows = getThemeShadows(theme);
   const isMasculine = theme === 'masculine';
 
-  const texts = {
-    pt: {
-      title: isMasculine ? 'Libere seus Poderes!' : 'Desbloqueie a Magia!',
-      subtitle: 'Assine o plano Premium',
-      price: '$9,99',
-      period: '/mês',
-      features: isMasculine
-        ? [
-            '⚡ 150 receitas poderosas por mês',
-            '🦸 150 personagens super-heróis 3D',
-            '🔥 Acesso a todos os poderes',
-            '💪 Sem interrupções',
-            '🌟 Suporte VIP',
-          ]
-        : [
-            '✨ 150 receitas mágicas por mês',
-            '🧁 150 personagens fofos 3D',
-            '🌈 Acesso a todos os temas',
-            '🍭 Sem anúncios',
-            '💖 Suporte prioritário',
-          ],
-      button: isMasculine ? 'Ativar Poderes' : 'Assinar Agora',
-      cancel: 'Talvez depois',
-      guarantee: '7 dias de garantia de reembolso',
-    },
-    en: {
-      title: isMasculine ? 'Unlock Your Powers!' : 'Unlock the Magic!',
-      subtitle: 'Subscribe to Premium',
-      price: '$9.99',
-      period: '/month',
-      features: isMasculine
-        ? [
-            '⚡ 150 powerful recipes per month',
-            '🦸 150 superhero 3D characters',
-            '🔥 Access to all powers',
-            '💪 No interruptions',
-            '🌟 VIP support',
-          ]
-        : [
-            '✨ 150 magical recipes per month',
-            '🧁 150 cute 3D characters',
-            '🌈 Access to all themes',
-            '🍭 No ads',
-            '💖 Priority support',
-          ],
-      button: isMasculine ? 'Activate Powers' : 'Subscribe Now',
-      cancel: 'Maybe later',
-      guarantee: '7-day money-back guarantee',
-    },
-  };
-
-  const t = texts[language];
+  // Features baseadas no tema (com emojis universais)
+  const features = isMasculine
+    ? [
+        `⚡ 150 ${t.generations}`,
+        '🦸 3D superhero characters',
+        '🔥 All powers unlocked',
+        '💪 No interruptions',
+        '🌟 VIP support',
+      ]
+    : [
+        `✨ 150 ${t.generations}`,
+        '🧁 3D cute characters',
+        '🌈 All themes unlocked',
+        '🍭 No ads',
+        '💖 Priority support',
+      ];
 
   // Cores baseadas no tema
   const gradientColors = isMasculine
-    ? ['#0F0F1A', '#1A1A2E', '#16213E']
-    : ['#87CEEB', '#E0F6FF', '#FFF5E1'];
+    ? ['#0F0F1A', '#1A1A2E', '#16213E'] as const
+    : ['#87CEEB', '#E0F6FF', '#FFF5E1'] as const;
 
   const headerGradient = isMasculine
-    ? ['#667EEA', '#764BA2']
-    : ['#FF6B9D', '#FFA07A'];
+    ? ['#667EEA', '#764BA2'] as const
+    : ['#FF6B9D', '#FFA07A'] as const;
 
   const cardBg = isMasculine ? '#1A1A2E' : '#FFFFFF';
   const textColor = isMasculine ? '#FFFFFF' : '#333333';
@@ -124,8 +86,10 @@ export function PaywallModal({ visible, onClose, onSubscribe, loading }: Paywall
               style={styles.header}
             >
               <Text style={styles.emoji}>{isMasculine ? '⚡' : '✨'}</Text>
-              <Text style={styles.title}>{t.title}</Text>
-              <Text style={styles.subtitle}>{t.subtitle}</Text>
+              <Text style={styles.title}>
+                {isMasculine ? t.unlockPower : t.unlockMagic}
+              </Text>
+              <Text style={styles.subtitle}>{t.monthlyPlan}</Text>
 
               {/* Decoração */}
               <View style={styles.decorRow}>
@@ -137,22 +101,19 @@ export function PaywallModal({ visible, onClose, onSubscribe, loading }: Paywall
 
             {/* Preço */}
             <View style={styles.priceContainer}>
-              <Text style={[styles.priceLabel, { color: subtextColor }]}>
-                {language === 'pt' ? 'Apenas' : 'Only'}
-              </Text>
               <View style={styles.priceRow}>
                 <Text style={[styles.price, { color: themeColors.primary }]}>
-                  {t.price}
+                  $9.99
                 </Text>
                 <Text style={[styles.period, { color: subtextColor }]}>
-                  {t.period}
+                  {t.perMonth}
                 </Text>
               </View>
             </View>
 
             {/* Features */}
             <View style={styles.features}>
-              {t.features.map((feature, index) => (
+              {features.map((feature, index) => (
                 <View
                   key={index}
                   style={[
@@ -170,7 +131,7 @@ export function PaywallModal({ visible, onClose, onSubscribe, loading }: Paywall
             {/* Botão de assinar */}
             <View style={styles.buttonContainer}>
               <Button
-                title={t.button}
+                title={t.subscribe}
                 onPress={onSubscribe}
                 loading={loading}
                 size="lg"
@@ -178,10 +139,17 @@ export function PaywallModal({ visible, onClose, onSubscribe, loading }: Paywall
               />
             </View>
 
-            {/* Garantia */}
-            <View style={[styles.guaranteeBox, { backgroundColor: isMasculine ? 'rgba(102, 126, 234, 0.1)' : 'rgba(255, 107, 157, 0.1)' }]}>
-              <Text style={[styles.guarantee, { color: themeColors.primary }]}>
-                🔒 {t.guarantee}
+            {/* Restaurar compra */}
+            <TouchableOpacity style={styles.restoreButton}>
+              <Text style={[styles.restoreText, { color: themeColors.primary }]}>
+                {t.restore}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Termos */}
+            <View style={[styles.termsBox, { backgroundColor: isMasculine ? 'rgba(102, 126, 234, 0.1)' : 'rgba(255, 107, 157, 0.1)' }]}>
+              <Text style={[styles.terms, { color: subtextColor }]}>
+                🔒 {t.termsNotice}
               </Text>
             </View>
 
@@ -255,10 +223,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.lg,
   },
-  priceLabel: {
-    fontSize: fonts.sizes.md,
-    marginBottom: spacing.xs,
-  },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -288,15 +252,24 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingTop: spacing.xl,
   },
-  guaranteeBox: {
+  restoreButton: {
+    alignItems: 'center',
+    paddingBottom: spacing.md,
+  },
+  restoreText: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: '600',
+  },
+  termsBox: {
     marginHorizontal: spacing.lg,
     padding: spacing.md,
     borderRadius: borderRadius.md,
     alignItems: 'center',
   },
-  guarantee: {
-    fontSize: fonts.sizes.sm,
-    fontWeight: '700',
+  terms: {
+    fontSize: fonts.sizes.xs,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   cancelButton: {
     padding: spacing.lg,

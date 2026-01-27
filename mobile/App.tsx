@@ -24,6 +24,7 @@ import { GenerationScreen } from './src/screens/GenerationScreen';
 import { ResultScreen } from './src/screens/ResultScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 
 // Theme
 import { getThemeColors } from './src/utils/theme';
@@ -138,6 +139,13 @@ function AppNavigator() {
             component={ResultScreen}
             options={{
               animation: 'slide_from_bottom',
+            }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{
+              animation: 'slide_from_right',
             }}
           />
         </>
