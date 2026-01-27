@@ -9,7 +9,7 @@ Gerador de Sobremesas Mágicas Infantis com IA - App React Native + API Node.js
 - 👶 **Para Crianças**: Interface divertida e segura
 - 🎭 **2 Temas**: Doces Fofos 🧁 ou Super-Heróis ⚡
 - 🌍 **Bilíngue**: Português e Inglês
-- 💳 **Sistema de Créditos**: Free (3) ou Premium (100)
+- 💳 **Assinatura**: $9.99/mês = 150 gerações (paywall antes de gerar)
 - 🔐 **Autenticação JWT**: Login seguro com refresh tokens
 - 📱 **100% Nativo**: Android e iOS com React Native/Expo
 
@@ -88,9 +88,9 @@ DATABASE_PATH=./database.sqlite
 # Google Gemini API
 GEMINI_API_KEY=sua-api-key-do-gemini
 
-# Sistema de Créditos
-FREE_CREDITS=3
-PREMIUM_CREDITS=100
+# Sistema de Créditos (0 = paywall obrigatório)
+FREE_CREDITS=0
+PREMIUM_CREDITS=150
 CREDIT_RENEWAL_DAYS=30
 
 # Cache
@@ -170,8 +170,8 @@ Após rodar `npm run seed`:
 
 | Email | Senha | Plano |
 |-------|-------|-------|
-| teste@email.com | teste123 | Free (3 créditos) |
-| premium@email.com | teste123 | Premium (100 créditos) |
+| teste@email.com | teste123 | Free (0 créditos - paywall) |
+| premium@email.com | teste123 | Premium (150 créditos) |
 | admin@email.com | admin123 | Admin |
 
 ## 🚀 Build para Produção

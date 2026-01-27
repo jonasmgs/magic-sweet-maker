@@ -5,3 +5,4 @@
 export { Button } from './Button';
 export { Input } from './Input';
 export { LoadingAnimation } from './LoadingAnimation';
+export { PaywallModal } from './PaywallModal';

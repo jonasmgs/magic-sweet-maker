@@ -16,8 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { userService } from '../services/api';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { PaywallModal } from '../components/PaywallModal';
 import { getThemeColors, fonts, spacing, borderRadius, shadows } from '../utils/theme';
 
 const POPULAR_INGREDIENTS = {
@@ -27,11 +29,16 @@ const POPULAR_INGREDIENTS = {
 
 export function HomeScreen() {
   const [ingredients, setIngredients] = useState('');
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
   const navigation = useNavigation<any>();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { theme, t, language, setTheme } = useLanguage();
   const themeColors = getThemeColors(theme);
   const isMasculine = theme === 'masculine';
+
+  const isPremium = user?.plan === 'premium';
+  const hasCredits = user && user.credits > 0;
 
   const handleGenerate = () => {
     if (!ingredients.trim()) {
@@ -42,12 +49,49 @@ export function HomeScreen() {
       return;
     }
 
-    if (user && user.credits <= 0) {
-      Alert.alert(t.noCredits, t.askAdult);
+    // Se não tem créditos, mostra paywall
+    if (!hasCredits) {
+      setShowPaywall(true);
       return;
     }
 
     navigation.navigate('Generation', { ingredients, theme, language });
+  };
+
+  const handleSubscribe = async () => {
+    setSubscribing(true);
+    try {
+      // Aqui você integraria com a loja (App Store / Google Play)
+      // Por enquanto, simula o upgrade
+      await userService.upgrade();
+      await refreshUser();
+      setShowPaywall(false);
+
+      Alert.alert(
+        '🎉',
+        language === 'pt'
+          ? 'Parabéns! Agora você tem 150 créditos!'
+          : 'Congratulations! You now have 150 credits!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Após assinar, gera automaticamente
+              if (ingredients.trim()) {
+                navigation.navigate('Generation', { ingredients, theme, language });
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert(
+        'Erro',
+        language === 'pt' ? 'Erro ao processar assinatura' : 'Error processing subscription'
+      );
+    } finally {
+      setSubscribing(false);
+    }
   };
 
   const addIngredient = (ingredient: string) => {
@@ -78,6 +122,11 @@ export function HomeScreen() {
                 {language === 'pt' ? 'Olá' : 'Hello'} {user?.name || ''}! 👋
               </Text>
               <View style={styles.creditsContainer}>
+                {isPremium ? (
+                  <View style={styles.premiumBadge}>
+                    <Text style={styles.premiumText}>⭐ Premium</Text>
+                  </View>
+                ) : null}
                 <Text style={[styles.credits, { color: themeColors.primary }]}>
                   ✨ {user?.credits || 0} {t.creditsLeft}
                 </Text>
@@ -153,18 +202,22 @@ export function HomeScreen() {
               icon={isMasculine ? '⚡' : '🪄'}
               size="lg"
               style={styles.generateButton}
-              disabled={user && user.credits <= 0}
             />
-          </View>
 
-          {/* Aviso se sem créditos */}
-          {user && user.credits <= 0 && (
-            <View style={[styles.warningCard, { backgroundColor: '#FFF3CD' }]}>
-              <Text style={styles.warningEmoji}>😢</Text>
-              <Text style={styles.warningText}>{t.noCredits}</Text>
-              <Text style={styles.warningSubtext}>{t.askAdult}</Text>
-            </View>
-          )}
+            {/* Mostra quantos créditos restam */}
+            {!hasCredits && (
+              <TouchableOpacity
+                onPress={() => setShowPaywall(true)}
+                style={styles.upgradeHint}
+              >
+                <Text style={[styles.upgradeHintText, { color: themeColors.primary }]}>
+                  {language === 'pt'
+                    ? '🔒 Assine para desbloquear'
+                    : '🔒 Subscribe to unlock'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {/* Emojis decorativos */}
           <View style={styles.emojisRow}>
@@ -178,6 +231,14 @@ export function HomeScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      {/* Modal de Paywall */}
+      <PaywallModal
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onSubscribe={handleSubscribe}
+        loading={subscribing}
+      />
     </LinearGradient>
   );
 }
@@ -204,6 +265,19 @@ const styles = StyleSheet.create({
   },
   creditsContainer: {
     marginTop: spacing.xs,
+  },
+  premiumBadge: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  premiumText: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: 'bold',
+    color: '#333',
   },
   credits: {
     fontSize: fonts.sizes.lg,
@@ -271,27 +345,13 @@ const styles = StyleSheet.create({
   generateButton: {
     marginTop: spacing.sm,
   },
-  warningCard: {
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+  upgradeHint: {
+    marginTop: spacing.md,
     alignItems: 'center',
-    marginBottom: spacing.lg,
   },
-  warningEmoji: {
-    fontSize: 48,
-    marginBottom: spacing.sm,
-  },
-  warningText: {
-    fontSize: fonts.sizes.lg,
-    fontWeight: 'bold',
-    color: '#856404',
-    textAlign: 'center',
-  },
-  warningSubtext: {
+  upgradeHintText: {
     fontSize: fonts.sizes.md,
-    color: '#856404',
-    textAlign: 'center',
-    marginTop: spacing.xs,
+    fontWeight: '600',
   },
   emojisRow: {
     flexDirection: 'row',
