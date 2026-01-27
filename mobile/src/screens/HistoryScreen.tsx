@@ -36,6 +36,7 @@ export function HistoryScreen() {
   const [desserts, setDesserts] = useState<DessertItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation<any>();
   const { theme, t, language } = useLanguage();
   const themeColors = getThemeColors(theme);
@@ -47,12 +48,21 @@ export function HistoryScreen() {
 
   const loadHistory = async () => {
     try {
+      setError(null);
       const response = await dessertService.getHistory();
-      if (response.success) {
+      if (response.success && Array.isArray(response.desserts)) {
         setDesserts(response.desserts);
+      } else {
+        setDesserts([]);
       }
-    } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
+    } catch (err) {
+      console.error('Erro ao carregar histórico:', err);
+      setError(
+        language === 'pt'
+          ? 'Erro ao carregar histórico. Tente novamente.'
+          : 'Failed to load history. Try again.'
+      );
+      setDesserts([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -103,16 +113,38 @@ export function HistoryScreen() {
     </TouchableOpacity>
   );
 
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyEmoji}>{isMasculine ? '🦸' : '🧁'}</Text>
-      <Text style={[styles.emptyText, { color: themeColors.textSecondary }]}>
-        {language === 'pt'
-          ? 'Nenhuma sobremesa criada ainda!\nVamos criar a primeira?'
-          : 'No desserts created yet!\nLet\'s create the first one?'}
-      </Text>
-    </View>
-  );
+  const renderEmpty = () => {
+    // Se há erro, mostra mensagem de erro com opção de retry
+    if (error) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>😕</Text>
+          <Text style={[styles.emptyText, { color: themeColors.textSecondary }]}>
+            {error}
+          </Text>
+          <TouchableOpacity
+            onPress={loadHistory}
+            style={[styles.retryButton, { backgroundColor: themeColors.primary }]}
+          >
+            <Text style={styles.retryText}>
+              {language === 'pt' ? 'Tentar novamente' : 'Try again'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyEmoji}>{isMasculine ? '🦸' : '🧁'}</Text>
+        <Text style={[styles.emptyText, { color: themeColors.textSecondary }]}>
+          {language === 'pt'
+            ? 'Nenhuma sobremesa criada ainda!\nVamos criar a primeira?'
+            : 'No desserts created yet!\nLet\'s create the first one?'}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <LinearGradient
@@ -222,5 +254,16 @@ const styles = StyleSheet.create({
     fontSize: fonts.sizes.md,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  retryButton: {
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontSize: fonts.sizes.md,
+    fontWeight: 'bold',
   },
 });

@@ -158,7 +158,7 @@ async function login(req, res) {
 
     res.json({
       success: true,
-      user: updatedUser,
+      user: User.sanitize(updatedUser),
       ...tokens
     });
   } catch (error) {
@@ -240,7 +240,7 @@ async function refreshToken(req, res) {
 
     res.json({
       success: true,
-      user,
+      user: User.sanitize(user),
       ...tokens
     });
   } catch (error) {
@@ -267,7 +267,7 @@ async function me(req, res) {
 
     res.json({
       success: true,
-      user
+      user: User.sanitize(user)
     });
   } catch (error) {
     console.error('Erro ao buscar usuário:', error);

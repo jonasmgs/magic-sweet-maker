@@ -9,9 +9,11 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { authenticate } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
+const { authLimiter, registerLimiter } = require('../middleware/rateLimiter');
 
 // POST /api/auth/register - Cadastro
 router.post('/register',
+  registerLimiter, // Proteção contra criação em massa de contas
   [
     body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
     body('password').isLength({ min: 6 }).withMessage('Senha deve ter pelo menos 6 caracteres'),
@@ -24,6 +26,7 @@ router.post('/register',
 
 // POST /api/auth/login - Login
 router.post('/login',
+  authLimiter, // Proteção contra brute force
   [
     body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
     body('password').notEmpty().withMessage('Senha é obrigatória'),
@@ -35,6 +38,7 @@ router.post('/login',
 
 // POST /api/auth/refresh - Renovar token
 router.post('/refresh',
+  authLimiter, // Proteção contra abuso de refresh
   [
     body('refreshToken').notEmpty().withMessage('Refresh token é obrigatório')
   ],

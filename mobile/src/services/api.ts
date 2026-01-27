@@ -7,8 +7,30 @@
 import axios, { AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-// URL do backend (alterar em produção)
-const API_URL = 'http://localhost:3000/api';
+// URL do backend - Configuração para diferentes ambientes
+// Em desenvolvimento: use localhost com seu IP local (ex: http://192.168.1.100:3000/api)
+// Em produção: use a URL do seu servidor
+import Constants from 'expo-constants';
+
+const getApiUrl = (): string => {
+  // Expo manifest extra (configurado em app.json ou app.config.js)
+  const expoApiUrl = Constants.expoConfig?.extra?.apiUrl;
+  if (expoApiUrl) return expoApiUrl;
+
+  // Fallback para desenvolvimento
+  // IMPORTANTE: Substitua pelo IP da sua máquina na rede local
+  // Use 'ipconfig' (Windows) ou 'ifconfig' (Mac/Linux) para descobrir
+  if (__DEV__) {
+    // Para emulador Android use 10.0.2.2
+    // Para dispositivo físico, use o IP da máquina (ex: 192.168.1.100)
+    return 'http://10.0.2.2:3000/api';
+  }
+
+  // Produção - substitua pela URL do seu servidor
+  return 'https://api.seudominio.com/api';
+};
+
+const API_URL = getApiUrl();
 
 // Criar instância do axios
 const api = axios.create({

@@ -24,6 +24,17 @@ export function GenerationScreen() {
   const { ingredients } = route.params || {};
 
   useEffect(() => {
+    // Validação de segurança: verifica se ingredients existe
+    if (!ingredients || typeof ingredients !== 'string' || !ingredients.trim()) {
+      Alert.alert(
+        language === 'pt' ? 'Erro' : 'Error',
+        language === 'pt'
+          ? 'Nenhum ingrediente fornecido'
+          : 'No ingredients provided',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+      return;
+    }
     generateDessert();
   }, []);
 
