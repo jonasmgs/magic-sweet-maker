@@ -1,5 +1,7 @@
 /**
  * Tela Principal - Seleção de Ingredientes
+ *
+ * Usa RevenueCat para verificar assinatura e limites
  */
 
 import React, { useState } from 'react';
@@ -16,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { userService } from '../services/api';
+import { useSubscription } from '../context/SubscriptionContext';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { PaywallModal } from '../components/PaywallModal';
@@ -25,72 +27,69 @@ import { getThemeColors, fonts, spacing, borderRadius, shadows } from '../utils/
 const POPULAR_INGREDIENTS = {
   pt: ['chocolate', 'morango', 'leite condensado', 'banana', 'baunilha', 'caramelo'],
   en: ['chocolate', 'strawberry', 'condensed milk', 'banana', 'vanilla', 'caramel'],
+  es: ['chocolate', 'fresa', 'leche condensada', 'plátano', 'vainilla', 'caramelo'],
+  fr: ['chocolat', 'fraise', 'lait concentré', 'banane', 'vanille', 'caramel'],
+  de: ['Schokolade', 'Erdbeere', 'Kondensmilch', 'Banane', 'Vanille', 'Karamell'],
+  it: ['cioccolato', 'fragola', 'latte condensato', 'banana', 'vaniglia', 'caramello'],
+  ja: ['チョコレート', 'いちご', '練乳', 'バナナ', 'バニラ', 'キャラメル'],
+  ko: ['초콜릿', '딸기', '연유', '바나나', '바닐라', '카라멜'],
+  zh: ['巧克力', '草莓', '炼乳', '香蕉', '香草', '焦糖'],
+  ru: ['шоколад', 'клубника', 'сгущёнка', 'банан', 'ваниль', 'карамель'],
+  ar: ['شوكولاتة', 'فراولة', 'حليب مكثف', 'موز', 'فانيليا', 'كراميل'],
+  hi: ['चॉकलेट', 'स्ट्रॉबेरी', 'कंडेंस्ड मिल्क', 'केला', 'वनीला', 'कारमेल'],
 };
 
 export function HomeScreen() {
   const [ingredients, setIngredients] = useState('');
   const [showPaywall, setShowPaywall] = useState(false);
-  const [subscribing, setSubscribing] = useState(false);
   const navigation = useNavigation<any>();
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const { theme, t, language, setTheme } = useLanguage();
+  const {
+    subscription,
+    isPremium,
+    canCreateRecipe,
+    incrementUsage,
+  } = useSubscription();
+
   const themeColors = getThemeColors(theme);
   const isMasculine = theme === 'masculine';
 
-  const isPremium = user?.plan === 'premium';
-  const hasCredits = user && user.credits > 0;
-
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!ingredients.trim()) {
       Alert.alert(
-        language === 'pt' ? 'Ops!' : 'Oops!',
+        t.errorTitle,
         language === 'pt' ? 'Digite pelo menos um ingrediente' : 'Enter at least one ingredient'
       );
       return;
     }
 
-    // Se não tem créditos, mostra paywall
-    if (!hasCredits) {
+    // Verificar se tem assinatura premium
+    if (!isPremium) {
       setShowPaywall(true);
       return;
     }
 
-    navigation.navigate('Generation', { ingredients, theme, language });
-  };
-
-  const handleSubscribe = async () => {
-    setSubscribing(true);
-    try {
-      // Aqui você integraria com a loja (App Store / Google Play)
-      // Por enquanto, simula o upgrade
-      await userService.upgrade();
-      await refreshUser();
-      setShowPaywall(false);
-
+    // Verificar se ainda tem receitas disponíveis no mês
+    if (!canCreateRecipe()) {
       Alert.alert(
-        '🎉',
-        language === 'pt'
-          ? 'Parabéns! Agora você tem 150 créditos!'
-          : 'Congratulations! You now have 150 credits!',
+        t.limitReached,
+        `${t.usedThisMonth}: ${subscription.usedThisMonth}/${subscription.monthlyLimit}`,
         [
+          { text: 'OK' },
           {
-            text: 'OK',
-            onPress: () => {
-              // Após assinar, gera automaticamente
-              if (ingredients.trim()) {
-                navigation.navigate('Generation', { ingredients, theme, language });
-              }
-            },
+            text: t.upgrade,
+            onPress: () => setShowPaywall(true),
           },
         ]
       );
-    } catch (error) {
-      Alert.alert(
-        'Erro',
-        language === 'pt' ? 'Erro ao processar assinatura' : 'Error processing subscription'
-      );
-    } finally {
-      setSubscribing(false);
+      return;
+    }
+
+    // Incrementar uso e navegar
+    const success = await incrementUsage();
+    if (success) {
+      navigation.navigate('Generation', { ingredients, theme, language });
     }
   };
 
@@ -103,7 +102,7 @@ export function HomeScreen() {
     }
   };
 
-  const popularIngredients = POPULAR_INGREDIENTS[language] || POPULAR_INGREDIENTS.pt;
+  const popularIngredients = POPULAR_INGREDIENTS[language as keyof typeof POPULAR_INGREDIENTS] || POPULAR_INGREDIENTS.en;
 
   return (
     <LinearGradient
@@ -119,19 +118,31 @@ export function HomeScreen() {
           <View style={styles.header}>
             <View>
               <Text style={[styles.greeting, { color: themeColors.textSecondary }]}>
-                {language === 'pt' ? 'Olá' : 'Hello'} {user?.name || ''}! 👋
+                {t.welcome} {user?.name || ''}! 👋
               </Text>
-              <View style={styles.creditsContainer}>
-                {isPremium ? (
-                  <View style={styles.premiumBadge}>
-                    <Text style={styles.premiumText}>⭐ Premium</Text>
+
+              {/* Status da assinatura */}
+              {isPremium ? (
+                <View style={styles.subscriptionInfo}>
+                  <View style={[styles.premiumBadge, { backgroundColor: themeColors.primary }]}>
+                    <Text style={styles.premiumText}>⭐ {subscription.planName}</Text>
                   </View>
-                ) : null}
-                <Text style={[styles.credits, { color: themeColors.primary }]}>
-                  ✨ {user?.credits || 0} {t.creditsLeft}
-                </Text>
-              </View>
+                  <Text style={[styles.usageText, { color: themeColors.primary }]}>
+                    {isMasculine ? '⚡' : '✨'} {subscription.remainingThisMonth}/{subscription.monthlyLimit} {t.remainingRecipes}
+                  </Text>
+                </View>
+              ) : (
+                <TouchableOpacity onPress={() => setShowPaywall(true)}>
+                  <View style={[styles.freeBadge, { borderColor: themeColors.primary }]}>
+                    <Text style={[styles.freeText, { color: themeColors.primary }]}>
+                      🔒 {t.free} - {t.upgrade}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
+
+            {/* Theme Toggle */}
             <View style={styles.themeToggle}>
               <TouchableOpacity
                 onPress={() => setTheme('feminine')}
@@ -157,16 +168,18 @@ export function HomeScreen() {
           {/* Título */}
           <View style={styles.titleContainer}>
             <Text style={styles.titleEmoji}>{isMasculine ? '⚡' : '🪄'}</Text>
-            <Text style={[styles.title, { color: themeColors.text }]}>{t.title}</Text>
+            <Text style={[styles.title, { color: themeColors.text }]}>
+              {isMasculine ? t.titleMasculine : t.title}
+            </Text>
             <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
-              {t.subtitle}
+              {isMasculine ? t.subtitleMasculine : t.subtitle}
             </Text>
           </View>
 
           {/* Input de ingredientes */}
           <View style={[styles.inputCard, { backgroundColor: themeColors.card }, shadows.md]}>
             <Input
-              label={language === 'pt' ? '🍭 Ingredientes' : '🍭 Ingredients'}
+              label={`${isMasculine ? '🔥' : '🍭'} ${language === 'pt' ? 'Ingredientes' : 'Ingredients'}`}
               value={ingredients}
               onChangeText={setIngredients}
               placeholder={t.inputPlaceholder}
@@ -197,25 +210,34 @@ export function HomeScreen() {
             </View>
 
             <Button
-              title={t.buttonText}
+              title={isMasculine ? t.buttonTextMasculine : t.buttonText}
               onPress={handleGenerate}
               icon={isMasculine ? '⚡' : '🪄'}
               size="lg"
               style={styles.generateButton}
             />
 
-            {/* Mostra quantos créditos restam */}
-            {!hasCredits && (
+            {/* Mostra hint para assinar se não for premium */}
+            {!isPremium && (
               <TouchableOpacity
                 onPress={() => setShowPaywall(true)}
                 style={styles.upgradeHint}
               >
                 <Text style={[styles.upgradeHintText, { color: themeColors.primary }]}>
-                  {language === 'pt'
-                    ? '🔒 Assine para desbloquear'
-                    : '🔒 Subscribe to unlock'}
+                  {isMasculine ? '🔓' : '✨'} {language === 'pt'
+                    ? 'Assine para criar receitas mágicas!'
+                    : 'Subscribe to create magic recipes!'}
                 </Text>
               </TouchableOpacity>
+            )}
+
+            {/* Mostra limite se for premium */}
+            {isPremium && subscription.remainingThisMonth <= 10 && (
+              <View style={[styles.limitWarning, { backgroundColor: themeColors.warning + '20' }]}>
+                <Text style={[styles.limitWarningText, { color: themeColors.warning }]}>
+                  ⚠️ {subscription.remainingThisMonth} {t.remainingRecipes}
+                </Text>
+              </View>
             )}
           </View>
 
@@ -232,12 +254,10 @@ export function HomeScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Modal de Paywall */}
+      {/* Modal de Paywall com RevenueCat */}
       <PaywallModal
         visible={showPaywall}
         onClose={() => setShowPaywall(false)}
-        onSubscribe={handleSubscribe}
-        loading={subscribing}
       />
     </LinearGradient>
   );
@@ -263,13 +283,12 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: fonts.sizes.md,
   },
-  creditsContainer: {
+  subscriptionInfo: {
     marginTop: spacing.xs,
   },
   premiumBadge: {
-    backgroundColor: '#FFD700',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: borderRadius.sm,
     marginBottom: spacing.xs,
     alignSelf: 'flex-start',
@@ -277,11 +296,23 @@ const styles = StyleSheet.create({
   premiumText: {
     fontSize: fonts.sizes.xs,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FFF',
   },
-  credits: {
-    fontSize: fonts.sizes.lg,
-    fontWeight: 'bold',
+  usageText: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: '600',
+  },
+  freeBadge: {
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  freeText: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: '600',
   },
   themeToggle: {
     flexDirection: 'row',
@@ -348,9 +379,20 @@ const styles = StyleSheet.create({
   upgradeHint: {
     marginTop: spacing.md,
     alignItems: 'center',
+    padding: spacing.sm,
   },
   upgradeHintText: {
     fontSize: fonts.sizes.md,
+    fontWeight: '600',
+  },
+  limitWarning: {
+    marginTop: spacing.md,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+  },
+  limitWarningText: {
+    fontSize: fonts.sizes.sm,
     fontWeight: '600',
   },
   emojisRow: {

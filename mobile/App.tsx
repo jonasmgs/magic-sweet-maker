@@ -16,6 +16,7 @@ import { Text } from 'react-native';
 // Contexts
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
+import { SubscriptionProvider } from './src/context/SubscriptionContext';
 
 // Screens
 import { AuthScreen } from './src/screens/AuthScreen';
@@ -25,6 +26,7 @@ import { ResultScreen } from './src/screens/ResultScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { TermsScreen } from './src/screens/TermsScreen';
 
 // Theme
 import { getThemeColors } from './src/utils/theme';
@@ -148,6 +150,13 @@ function AppNavigator() {
               animation: 'slide_from_right',
             }}
           />
+          <Stack.Screen
+            name="Terms"
+            component={TermsScreen}
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
         </>
       )}
     </Stack.Navigator>
@@ -180,7 +189,9 @@ export default function App() {
       <SafeAreaProvider>
         <LanguageProvider>
           <AuthProvider>
-            <AppContent />
+            <SubscriptionProvider>
+              <AppContent />
+            </SubscriptionProvider>
           </AuthProvider>
         </LanguageProvider>
       </SafeAreaProvider>
