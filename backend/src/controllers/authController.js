@@ -9,8 +9,10 @@ const { v4: uuidv4 } = require('uuid');
 const User = require('../models/User');
 const UsageLog = require('../models/UsageLog');
 const { runQuery, getOne } = require('../config/database');
+const { getJwtSecret } = require('../config/env');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-me';
+// JWT_SECRET obtido de forma segura - sem fallback inseguro
+const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
 

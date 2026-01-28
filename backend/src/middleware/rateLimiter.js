@@ -9,6 +9,19 @@ const rateLimit = require('express-rate-limit');
 const WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60000; // 1 minuto
 const MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 10;
 
+// Admin emails carregados de variável de ambiente
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
+  .split(',')
+  .map(e => e.trim().toLowerCase())
+  .filter(e => e.length > 0);
+
+/**
+ * Verifica se email é admin
+ */
+function isAdminEmail(email) {
+  return ADMIN_EMAILS.includes((email || '').toLowerCase());
+}
+
 /**
  * Rate limiter global
  */
@@ -46,8 +59,8 @@ const generateLimiter = rateLimit({
     return req.userId || req.ip;
   },
   skip: (req) => {
-    // Não aplicar para admins
-    return req.userEmail === 'admin@email.com';
+    // Não aplicar para admins (configurado via ADMIN_EMAILS)
+    return isAdminEmail(req.userEmail);
   }
 });
 

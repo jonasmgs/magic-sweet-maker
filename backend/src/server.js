@@ -15,6 +15,10 @@ const routes = require('./routes');
 const { globalLimiter } = require('./middleware/rateLimiter');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const { getDatabase } = require('./config/database');
+const { validateEnv, getCorsOrigin } = require('./config/env');
+
+// Validar variáveis de ambiente antes de iniciar
+validateEnv();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,10 +28,14 @@ getDatabase();
 
 // Middlewares de segurança
 app.use(helmet());
+
+// CORS configurado de forma segura
+const corsOrigins = getCorsOrigin();
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: corsOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Middlewares de parsing

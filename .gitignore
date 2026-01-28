@@ -7,11 +7,20 @@ dist-ssr/
 build/
 .expo/
 
-# Environment files (contain secrets)
+# Environment files (contain secrets) - NUNCA commit!
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
 *.local
+# Explicit paths for safety
+backend/.env
+mobile/.env
+# Keep example files
+!.env.example
+!backend/.env.example
+!mobile/.env.example
 
 # Database
 *.sqlite

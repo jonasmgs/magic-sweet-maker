@@ -15,7 +15,13 @@ import Constants from 'expo-constants';
 const getApiUrl = (): string => {
   // Expo manifest extra (configurado em app.json ou app.config.js)
   const expoApiUrl = Constants.expoConfig?.extra?.apiUrl;
-  if (expoApiUrl) return expoApiUrl;
+  if (expoApiUrl) {
+    // Validar que produção usa HTTPS
+    if (!__DEV__ && expoApiUrl.startsWith('http://')) {
+      console.error('⚠️  ERRO DE SEGURANÇA: API_URL deve usar HTTPS em produção!');
+    }
+    return expoApiUrl;
+  }
 
   // Fallback para desenvolvimento
   // IMPORTANTE: Substitua pelo IP da sua máquina na rede local
@@ -23,11 +29,15 @@ const getApiUrl = (): string => {
   if (__DEV__) {
     // Para emulador Android use 10.0.2.2
     // Para dispositivo físico, use o IP da máquina (ex: 192.168.1.100)
+    // AVISO: HTTP é permitido apenas em desenvolvimento
+    console.warn('⚠️  Usando HTTP em desenvolvimento. Configure HTTPS para produção.');
     return 'http://10.0.2.2:3000/api';
   }
 
-  // Produção - substitua pela URL do seu servidor
-  return 'https://api.seudominio.com/api';
+  // Produção - DEVE ser configurado via app.json ou app.config.js
+  // Esta URL é um placeholder e falhará se não for configurada
+  console.error('⚠️  ERRO: Configure API_URL em app.json/app.config.js para produção!');
+  return 'https://api.example.com/api'; // Placeholder - configure antes do deploy
 };
 
 const API_URL = getApiUrl();

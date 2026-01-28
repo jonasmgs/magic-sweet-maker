@@ -88,14 +88,46 @@ async function getCredits(req, res) {
 
 /**
  * Faz upgrade para Premium
- * Em produção, isso seria chamado após confirmação de pagamento
+ *
+ * IMPORTANTE: Este endpoint está DESABILITADO para uso direto.
+ * O upgrade deve ser feito via RevenueCat webhook ou através
+ * de verificação de pagamento com gateway (Stripe, etc.)
+ *
+ * Para ativar, configure ENABLE_DIRECT_UPGRADE=true no .env
+ * (NÃO RECOMENDADO em produção sem validação de pagamento)
  */
 async function upgradeToPremium(req, res) {
   try {
-    const { paymentToken } = req.body;
+    const { paymentToken, revenuecatUserId } = req.body;
+    const isProd = process.env.NODE_ENV === 'production';
+    const allowDirectUpgrade = process.env.ENABLE_DIRECT_UPGRADE === 'true';
 
-    // Em produção, verificar pagamento com gateway (Stripe, etc.)
-    // Por enquanto, apenas simula o upgrade
+    // Em produção, NÃO permitir upgrade direto sem verificação
+    if (isProd && !allowDirectUpgrade) {
+      return res.status(403).json({
+        success: false,
+        error: 'Upgrade direto não permitido. Use o sistema de assinatura do app.',
+        code: 'DIRECT_UPGRADE_DISABLED'
+      });
+    }
+
+    // Se não está em produção, exigir pelo menos um token
+    if (!paymentToken && !revenuecatUserId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Token de pagamento ou ID RevenueCat é obrigatório',
+        code: 'PAYMENT_TOKEN_REQUIRED'
+      });
+    }
+
+    // Log de aviso em desenvolvimento
+    if (!isProd) {
+      console.warn(`⚠️  AVISO: Upgrade direto usado em desenvolvimento para userId: ${req.userId}`);
+    }
+
+    // TODO: Implementar verificação real com RevenueCat ou Stripe
+    // const isValid = await verifyPayment(paymentToken);
+    // if (!isValid) { return res.status(402)... }
 
     const user = await User.upgradeToPremium(req.userId);
 
@@ -103,7 +135,11 @@ async function upgradeToPremium(req, res) {
     await UsageLog.create({
       userId: req.userId,
       action: 'upgrade_premium',
-      details: { paymentToken },
+      details: {
+        paymentToken: paymentToken ? '[REDACTED]' : null,
+        revenuecatUserId,
+        method: 'direct_api'
+      },
       ipAddress: req.ip
     });
 

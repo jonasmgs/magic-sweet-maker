@@ -166,13 +166,11 @@ POST /api/users/upgrade  - Upgrade Premium
 
 ## 👥 Usuários de Teste
 
-Após rodar `npm run seed`:
+Após rodar `npm run seed`, usuários de teste são criados automaticamente.
+Consulte o arquivo `backend/src/config/seed.js` para detalhes.
 
-| Email | Senha | Plano |
-|-------|-------|-------|
-| teste@email.com | teste123 | Free (0 créditos - paywall) |
-| premium@email.com | teste123 | Premium (150 créditos) |
-| admin@email.com | admin123 | Admin |
+> **Nota de Segurança**: Nunca use os usuários de teste em produção.
+> Altere todas as credenciais antes do deploy.
 
 ## 🚀 Build para Produção
 

@@ -6,8 +6,16 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { getJwtSecret } = require('../config/env');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-me';
+// JWT_SECRET obtido de forma segura - sem fallback inseguro
+const JWT_SECRET = getJwtSecret();
+
+// Admin emails carregados de variável de ambiente (lista separada por vírgula)
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
+  .split(',')
+  .map(e => e.trim().toLowerCase())
+  .filter(e => e.length > 0);
 
 /**
  * Middleware de autenticação principal
@@ -70,19 +78,30 @@ async function authenticate(req, res, next) {
 
 /**
  * Middleware que requer usuário admin
- * (Por enquanto, considera admin o usuário com email admin@email.com)
+ * Admins são definidos pela variável de ambiente ADMIN_EMAILS
  */
 async function requireAdmin(req, res, next) {
   try {
-    const ADMIN_EMAILS = ['admin@email.com'];
+    // Verificar se lista de admins está configurada
+    if (ADMIN_EMAILS.length === 0) {
+      console.warn('⚠️  ADMIN_EMAILS não configurado. Nenhum usuário terá acesso admin.');
+      return res.status(403).json({
+        success: false,
+        error: 'Acesso negado. Sistema de admin não configurado.'
+      });
+    }
 
-    if (!ADMIN_EMAILS.includes(req.userEmail)) {
+    // Verificar se usuário é admin
+    const userEmail = (req.userEmail || '').toLowerCase();
+    if (!ADMIN_EMAILS.includes(userEmail)) {
       return res.status(403).json({
         success: false,
         error: 'Acesso negado. Requer privilégios de administrador.'
       });
     }
 
+    // Marcar request como admin
+    req.isAdmin = true;
     next();
   } catch (error) {
     console.error('Erro ao verificar admin:', error);
@@ -91,6 +110,13 @@ async function requireAdmin(req, res, next) {
       error: 'Erro ao verificar permissões'
     });
   }
+}
+
+/**
+ * Verifica se um email é admin (para uso interno)
+ */
+function isAdminEmail(email) {
+  return ADMIN_EMAILS.includes((email || '').toLowerCase());
 }
 
 /**
@@ -152,5 +178,6 @@ module.exports = {
   authenticate,
   requireAdmin,
   requirePremium,
-  optionalAuth
+  optionalAuth,
+  isAdminEmail
 };
