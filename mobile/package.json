@@ -19,6 +19,7 @@
     "expo-application": "~5.8.3",
     "expo-device": "~6.0.2",
     "expo-linear-gradient": "~13.0.2",
+    "expo-localization": "~14.8.4",
     "expo-secure-store": "~13.0.1",
     "expo-status-bar": "~1.11.1",
     "react": "18.2.0",

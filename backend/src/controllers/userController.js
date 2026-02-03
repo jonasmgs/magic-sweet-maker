@@ -7,6 +7,7 @@
 const User = require('../models/User');
 const UsageLog = require('../models/UsageLog');
 const Dessert = require('../models/Dessert');
+const PaymentService = require('../services/paymentService');
 
 /**
  * Obtém perfil completo do usuário
@@ -122,6 +123,47 @@ async function upgradeToPremium(req, res) {
 }
 
 /**
+ * Cria sessão de pagamento (Stripe Checkout)
+ */
+async function createCheckoutSession(req, res) {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'Usuário não encontrado'
+      });
+    }
+
+    const session = await PaymentService.createCheckoutSession({
+      userId: user.id,
+      email: user.email
+    });
+
+    await UsageLog.create({
+      userId: user.id,
+      action: 'payment_checkout_created',
+      details: { sessionId: session.id },
+      ipAddress: req.ip
+    });
+
+    res.json({
+      success: true,
+      checkoutUrl: session.url,
+      sessionId: session.id
+    });
+  } catch (error) {
+    console.error('Erro ao criar checkout:', error);
+
+    const status = error.code === 'STRIPE_NOT_CONFIGURED' ? 400 : 500;
+    res.status(status).json({
+      success: false,
+      error: error.message || 'Erro ao iniciar pagamento'
+    });
+  }
+}
+
+/**
  * Atualiza perfil do usuário
  */
 async function updateProfile(req, res) {
@@ -193,6 +235,7 @@ module.exports = {
   getProfile,
   getCredits,
   upgradeToPremium,
+  createCheckoutSession,
   updateProfile,
   getUsageHistory
 };

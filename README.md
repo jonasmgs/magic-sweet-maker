@@ -8,7 +8,7 @@ Gerador de Sobremesas Mágicas Infantis com IA - App React Native + API Node.js
 - 🖼️ **Imagens Mágicas**: Personagens 3D estilo Pixar/Disney
 - 👶 **Para Crianças**: Interface divertida e segura
 - 🎭 **2 Temas**: Doces Fofos 🧁 ou Super-Heróis ⚡
-- 🌍 **Bilíngue**: Português e Inglês
+- 🌍 **Multilíngue**: Português, Inglês, Espanhol, Francês e Alemão
 - 💳 **Sistema de Créditos**:  Premium (150)
 - 🔐 **Autenticação JWT**: Login seguro com refresh tokens
 - 📱 **100% Nativo**: Android e iOS com React Native/Expo
@@ -100,6 +100,12 @@ CACHE_TTL_SECONDS=86400
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=60000
 RATE_LIMIT_MAX_REQUESTS=10
+
+# Pagamentos (Stripe)
+STRIPE_SECRET_KEY=sua-stripe-secret-key
+STRIPE_PRICE_ID=price_seu_price_id
+STRIPE_SUCCESS_URL=https://seusite.com/pagamento/sucesso
+STRIPE_CANCEL_URL=https://seusite.com/pagamento/cancelado
 ```
 
 ### Obter API Key do Gemini
