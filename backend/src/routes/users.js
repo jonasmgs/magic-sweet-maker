@@ -26,6 +26,12 @@ router.post('/upgrade',
   userController.upgradeToPremium
 );
 
+// POST /api/users/upgrade/checkout - Criar sessão de pagamento
+router.post('/upgrade/checkout',
+  authenticate,
+  userController.createCheckoutSession
+);
+
 // PUT /api/users/profile - Atualizar perfil
 router.put('/profile',
   authenticate,

@@ -159,6 +159,11 @@ export const userService = {
     return response.data;
   },
 
+  async createCheckoutSession() {
+    const response = await api.post('/users/upgrade/checkout');
+    return response.data;
+  },
+
   async updateProfile(name: string) {
     const response = await api.put('/users/profile', { name });
     return response.data;

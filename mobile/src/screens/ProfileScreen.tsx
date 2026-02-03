@@ -10,6 +10,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,36 +22,39 @@ import { getThemeColors, fonts, spacing, borderRadius, shadows } from '../utils/
 
 export function ProfileScreen() {
   const [upgrading, setUpgrading] = useState(false);
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, t, language, setLanguage, setTheme } = useLanguage();
   const themeColors = getThemeColors(theme);
   const isMasculine = theme === 'masculine';
+  const languageOptions = [
+    { code: 'pt', label: '🇧🇷 PT' },
+    { code: 'en', label: '🇺🇸 EN' },
+    { code: 'es', label: '🇪🇸 ES' },
+    { code: 'fr', label: '🇫🇷 FR' },
+    { code: 'de', label: '🇩🇪 DE' },
+  ] as const;
 
   const handleUpgrade = async () => {
     Alert.alert(
-      language === 'pt' ? 'Fazer Upgrade' : 'Upgrade',
-      language === 'pt'
-        ? 'Deseja fazer upgrade para o plano Premium? (Simulação)'
-        : 'Do you want to upgrade to Premium plan? (Simulation)',
+      t.upgradeTitle,
+      t.upgradeMessage,
       [
-        { text: language === 'pt' ? 'Cancelar' : 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
-          text: language === 'pt' ? 'Confirmar' : 'Confirm',
+          text: t.confirm,
           onPress: async () => {
             setUpgrading(true);
             try {
-              await userService.upgrade();
-              await refreshUser();
-              Alert.alert(
-                '🎉',
-                language === 'pt'
-                  ? 'Parabéns! Você agora é Premium!'
-                  : 'Congratulations! You are now Premium!'
-              );
+              const response = await userService.createCheckoutSession();
+              if (response?.checkoutUrl) {
+                await Linking.openURL(response.checkoutUrl);
+              } else {
+                throw new Error('Checkout indisponível');
+              }
             } catch (error) {
               Alert.alert(
-                'Erro',
-                language === 'pt' ? 'Erro ao fazer upgrade' : 'Error upgrading'
+                t.errorTitle,
+                t.paymentError
               );
             } finally {
               setUpgrading(false);
@@ -64,9 +68,9 @@ export function ProfileScreen() {
   const handleLogout = () => {
     Alert.alert(
       t.logout,
-      language === 'pt' ? 'Deseja sair da conta?' : 'Do you want to logout?',
+      t.logoutQuestion,
       [
-        { text: language === 'pt' ? 'Cancelar' : 'Cancel', style: 'cancel' },
+        { text: t.cancel, style: 'cancel' },
         {
           text: t.logout,
           style: 'destructive',
@@ -146,40 +150,34 @@ export function ProfileScreen() {
           {/* Configurações */}
           <View style={[styles.card, { backgroundColor: themeColors.card }, shadows.md]}>
             <Text style={[styles.cardTitle, { color: themeColors.text }]}>
-              {language === 'pt' ? '⚙️ Configurações' : '⚙️ Settings'}
+              {t.settingsTitle}
             </Text>
 
             {/* Idioma */}
             <View style={styles.settingRow}>
               <Text style={[styles.settingLabel, { color: themeColors.text }]}>
-                {language === 'pt' ? 'Idioma' : 'Language'}
+                {t.languageLabel}
               </Text>
               <View style={styles.optionButtons}>
-                <TouchableOpacity
-                  onPress={() => setLanguage('pt')}
-                  style={[
-                    styles.optionButton,
-                    language === 'pt' && { backgroundColor: themeColors.primary + '30' },
-                  ]}
-                >
-                  <Text style={styles.optionText}>🇧🇷 PT</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setLanguage('en')}
-                  style={[
-                    styles.optionButton,
-                    language === 'en' && { backgroundColor: themeColors.primary + '30' },
-                  ]}
-                >
-                  <Text style={styles.optionText}>🇺🇸 EN</Text>
-                </TouchableOpacity>
+                {languageOptions.map(option => (
+                  <TouchableOpacity
+                    key={option.code}
+                    onPress={() => setLanguage(option.code)}
+                    style={[
+                      styles.optionButton,
+                      language === option.code && { backgroundColor: themeColors.primary + '30' },
+                    ]}
+                  >
+                    <Text style={styles.optionText}>{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
 
             {/* Tema */}
             <View style={styles.settingRow}>
               <Text style={[styles.settingLabel, { color: themeColors.text }]}>
-                {language === 'pt' ? 'Tema' : 'Theme'}
+                {t.themeLabel}
               </Text>
               <View style={styles.optionButtons}>
                 <TouchableOpacity
@@ -189,7 +187,7 @@ export function ProfileScreen() {
                     theme === 'feminine' && { backgroundColor: themeColors.primary + '30' },
                   ]}
                 >
-                  <Text style={styles.optionText}>🧁 {language === 'pt' ? 'Doces' : 'Sweets'}</Text>
+                  <Text style={styles.optionText}>🧁 {t.themeSweets}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setTheme('masculine')}
@@ -198,7 +196,7 @@ export function ProfileScreen() {
                     theme === 'masculine' && { backgroundColor: themeColors.primary + '30' },
                   ]}
                 >
-                  <Text style={styles.optionText}>🦸 {language === 'pt' ? 'Heróis' : 'Heroes'}</Text>
+                  <Text style={styles.optionText}>🦸 {t.themeHeroes}</Text>
                 </TouchableOpacity>
               </View>
             </View>
