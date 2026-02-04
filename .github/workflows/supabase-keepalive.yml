@@ -57,7 +57,7 @@ jobs:
             echo "Telegram secrets missing."
             exit 0
           fi
-          MESSAGE="⚠️ Supabase keep-alive falhou. Verifique: $BACKEND_HEALTH_URL"
+          MESSAGE="🚨 Supabase offline — ${BACKEND_HEALTH_URL}"
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
             -d "text=${MESSAGE}" \
