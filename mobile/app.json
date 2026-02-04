@@ -31,9 +31,12 @@
     },
     "extra": {
       "apiUrl": "https://magic-sweet-maker-1.onrender.com/api",
-      "googleClientIdIos": "SEU_GOOGLE_CLIENT_ID_IOS",
-      "googleClientIdAndroid": "SEU_GOOGLE_CLIENT_ID_ANDROID",
-      "googleClientIdWeb": "SEU_GOOGLE_CLIENT_ID_WEB"
+      "googleClientIdIos": "909357132572-a9vef7bhtp5rfjt7tf802e2u9u88kau9.apps.googleusercontent.com",
+      "googleClientIdAndroid": "909357132572-lk8hfr10mrbaqf5aql9ifa2ndcpo29fe.apps.googleusercontent.com",
+      "googleClientIdWeb": "909357132572-j6rl0ehai1ekqsh9tcomulan2ickgeuf.apps.googleusercontent.com",
+      "eas": {
+        "projectId": "620d9279-a13e-47d4-b94e-92a4b6b79f36"
+      }
     },
     "plugins": [
       "expo-apple-authentication"
