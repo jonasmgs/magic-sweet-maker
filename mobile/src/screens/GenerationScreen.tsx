@@ -17,7 +17,7 @@ export function GenerationScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { refreshUser } = useAuth();
-  const { theme, language } = useLanguage();
+  const { theme, language, t } = useLanguage();
   const themeColors = getThemeColors(theme);
   const isMasculine = theme === 'masculine';
 
@@ -44,26 +44,15 @@ export function GenerationScreen() {
       console.error('Erro na geração:', error);
 
       const errorData = error.response?.data;
-      let errorMessage = language === 'pt'
-        ? 'Não conseguimos criar seu doce. Tente novamente!'
-        : "We couldn't create your sweet. Try again!";
-
-      if (errorData?.errorType === 'credits') {
-        errorMessage = language === 'pt'
-          ? 'Os créditos mágicos acabaram! 😢'
-          : 'Magic credits ran out! 😢';
-      } else if (errorData?.errorType === 'rate-limit') {
-        errorMessage = language === 'pt'
-          ? 'Muita magia de uma vez! Aguarde um momento.'
-          : 'Too much magic at once! Wait a moment.';
-      }
+      let errorMessage = t.generateErrorDefault;\n
+      if (errorData?.errorType === 'credits') {\n        errorMessage = t.generateErrorCredits;\n      } else if (errorData?.errorType === 'rate-limit') {\n        errorMessage = t.generateErrorRateLimit;\n      }
 
       Alert.alert(
-        language === 'pt' ? 'Ops!' : 'Oops!',
+        t.oopsTitle,
         errorMessage,
         [
           {
-            text: 'OK',
+            text: t.ok,
             onPress: () => navigation.goBack(),
           },
         ]

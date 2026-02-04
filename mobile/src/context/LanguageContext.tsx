@@ -8,7 +8,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import * as Localization from 'expo-localization';
 
-type Language = 'pt' | 'en' | 'es' | 'fr' | 'de';
+type Language = 'pt' | 'en' | 'es' | 'fr' | 'de' | 'ja';
 type Theme = 'feminine' | 'masculine';
 
 interface Translations {
@@ -55,6 +55,28 @@ interface Translations {
   creditsLeft: string;
   noCredits: string;
   askAdult: string;
+  greetingHello: string;
+  ingredientsLabel: string;
+  popularIngredientsLabel: string;
+  oopsTitle: string;
+  emptyIngredientsMessage: string;
+  recipeNotFound: string;
+  ingredientsTitleHero: string;
+  stepsTitleHero: string;
+  ok: string;
+  generateErrorDefault: string;
+  generateErrorCredits: string;
+  generateErrorRateLimit: string;
+  errorShort: string;
+  continueWithGoogle: string;
+  authProvidersOnly: string;
+  errorGoogleTokenMissing: string;
+  errorGoogleLogin: string;
+  errorGoogleOpen: string;
+  errorAppleTokenMissing: string;
+  errorAppleLogin: string;
+  historyEmpty: string;
+  dessertCountLabel: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -102,6 +124,28 @@ const translations: Record<Language, Translations> = {
     creditsLeft: 'créditos restantes',
     noCredits: 'Os créditos mágicos acabaram!',
     askAdult: 'Peça para um adulto carregar mais créditos!',
+    greetingHello: 'Ol?',
+    ingredientsLabel: '?? Ingredientes',
+    popularIngredientsLabel: 'Ingredientes populares:',
+    oopsTitle: 'Ops!',
+    emptyIngredientsMessage: 'Digite pelo menos um ingrediente',
+    recipeNotFound: 'Receita n?o encontrada',
+    ingredientsTitleHero: '? Ingredientes',
+    stepsTitleHero: '?? Como Fazer',
+    ok: 'OK',
+    generateErrorDefault: 'N?o conseguimos criar seu doce. Tente novamente!',
+    generateErrorCredits: 'Os cr?ditos m?gicos acabaram! ??',
+    generateErrorRateLimit: 'Muita magia de uma vez! Aguarde um momento.',
+    errorShort: 'Erro',
+    continueWithGoogle: 'Continuar com Google',
+    authProvidersOnly: 'Cadastro e login somente via Google ou Apple.',
+    errorGoogleTokenMissing: 'Token do Google n?o encontrado',
+    errorGoogleLogin: 'Erro ao entrar com Google',
+    errorGoogleOpen: 'Erro ao abrir login do Google',
+    errorAppleTokenMissing: 'Token da Apple n?o encontrado',
+    errorAppleLogin: 'Erro ao entrar com Apple',
+    historyEmpty: 'Nenhuma sobremesa criada ainda!\nVamos criar a primeira?',
+    dessertCountLabel: 'sobremesas',
   },
   en: {
     title: 'Sweet Magic',
@@ -147,6 +191,28 @@ const translations: Record<Language, Translations> = {
     creditsLeft: 'credits left',
     noCredits: 'Magic credits ran out!',
     askAdult: 'Ask an adult to add more credits!',
+    greetingHello: 'Hello',
+    ingredientsLabel: '?? Ingredients',
+    popularIngredientsLabel: 'Popular ingredients:',
+    oopsTitle: 'Oops!',
+    emptyIngredientsMessage: 'Enter at least one ingredient',
+    recipeNotFound: 'Recipe not found',
+    ingredientsTitleHero: '? Ingredients',
+    stepsTitleHero: '?? How to Make',
+    ok: 'OK',
+    generateErrorDefault: "We couldn't create your sweet. Try again!",
+    generateErrorCredits: 'Magic credits ran out! ??',
+    generateErrorRateLimit: 'Too much magic at once! Wait a moment.',
+    errorShort: 'Error',
+    continueWithGoogle: 'Continue with Google',
+    authProvidersOnly: 'Sign up and sign in only via Google or Apple.',
+    errorGoogleTokenMissing: 'Google token not found',
+    errorGoogleLogin: 'Error signing in with Google',
+    errorGoogleOpen: 'Error opening Google login',
+    errorAppleTokenMissing: 'Apple token not found',
+    errorAppleLogin: 'Error signing in with Apple',
+    historyEmpty: "No desserts created yet!\nLet's create the first one?",
+    dessertCountLabel: 'desserts',
   },
   es: {
     title: 'Dulce Mágico',
@@ -192,6 +258,28 @@ const translations: Record<Language, Translations> = {
     creditsLeft: 'créditos restantes',
     noCredits: '¡Se acabaron los créditos mágicos!',
     askAdult: '¡Pide a un adulto que agregue más créditos!',
+    greetingHello: 'Hola',
+    ingredientsLabel: '?? Ingredientes',
+    popularIngredientsLabel: 'Ingredientes populares:',
+    oopsTitle: '?Ups!',
+    emptyIngredientsMessage: 'Escribe al menos un ingrediente',
+    recipeNotFound: 'Receta no encontrada',
+    ingredientsTitleHero: '? Ingredientes',
+    stepsTitleHero: '?? C?mo preparar',
+    ok: 'OK',
+    generateErrorDefault: 'No pudimos crear tu dulce. ?Intenta de nuevo!',
+    generateErrorCredits: '?Se acabaron los cr?ditos m?gicos! ??',
+    generateErrorRateLimit: '?Demasiada magia a la vez! Espera un momento.',
+    errorShort: 'Error',
+    continueWithGoogle: 'Continuar con Google',
+    authProvidersOnly: 'Registro e inicio de sesi?n solo con Google o Apple.',
+    errorGoogleTokenMissing: 'Token de Google no encontrado',
+    errorGoogleLogin: 'Error al iniciar sesi?n con Google',
+    errorGoogleOpen: 'Error al abrir el inicio de sesi?n de Google',
+    errorAppleTokenMissing: 'Token de Apple no encontrado',
+    errorAppleLogin: 'Error al iniciar sesi?n con Apple',
+    historyEmpty: '?A?n no hay postres creados!\n?Creamos el primero?',
+    dessertCountLabel: 'postres',
   },
   fr: {
     title: 'Douceur Magique',
@@ -237,6 +325,28 @@ const translations: Record<Language, Translations> = {
     creditsLeft: 'crédits restants',
     noCredits: 'Les crédits magiques sont épuisés !',
     askAdult: 'Demande à un adulte d’ajouter des crédits !',
+    greetingHello: 'Bonjour',
+    ingredientsLabel: '?? Ingr?dients',
+    popularIngredientsLabel: 'Ingr?dients populaires :',
+    oopsTitle: 'Oups !',
+    emptyIngredientsMessage: 'Saisis au moins un ingr?dient',
+    recipeNotFound: 'Recette introuvable',
+    ingredientsTitleHero: '? Ingr?dients',
+    stepsTitleHero: '?? Pr?paration',
+    ok: 'OK',
+    generateErrorDefault: 'Impossible de cr?er ta douceur. R?essaie !',
+    generateErrorCredits: 'Les cr?dits magiques sont ?puis?s ! ??',
+    generateErrorRateLimit: 'Trop de magie d?un coup ! Attends un moment.',
+    errorShort: 'Erreur',
+    continueWithGoogle: 'Continuer avec Google',
+    authProvidersOnly: 'Inscription et connexion uniquement via Google ou Apple.',
+    errorGoogleTokenMissing: 'Token Google introuvable',
+    errorGoogleLogin: 'Erreur de connexion avec Google',
+    errorGoogleOpen: 'Erreur lors de l?ouverture de Google',
+    errorAppleTokenMissing: 'Token Apple introuvable',
+    errorAppleLogin: 'Erreur de connexion avec Apple',
+    historyEmpty: "Aucune douceur cr??e pour l?instant !\nOn cr?e la premi?re ?",
+    dessertCountLabel: 'desserts',
   },
   de: {
     title: 'Magische Süße',
@@ -282,6 +392,96 @@ const translations: Record<Language, Translations> = {
     creditsLeft: 'Credits übrig',
     noCredits: 'Die magischen Credits sind aufgebraucht!',
     askAdult: 'Bitte einen Erwachsenen, mehr Credits hinzuzufügen!',
+    greetingHello: 'Hallo',
+    ingredientsLabel: '?? Zutaten',
+    popularIngredientsLabel: 'Beliebte Zutaten:',
+    oopsTitle: 'Hoppla!',
+    emptyIngredientsMessage: 'Gib mindestens eine Zutat ein',
+    recipeNotFound: 'Rezept nicht gefunden',
+    ingredientsTitleHero: '? Zutaten',
+    stepsTitleHero: '?? Zubereitung',
+    ok: 'OK',
+    generateErrorDefault: 'Wir konnten deine S??igkeit nicht erstellen. Versuch es erneut!',
+    generateErrorCredits: 'Die magischen Credits sind aufgebraucht! ??',
+    generateErrorRateLimit: 'Zu viel Magie auf einmal! Warte einen Moment.',
+    errorShort: 'Fehler',
+    continueWithGoogle: 'Mit Google fortfahren',
+    authProvidersOnly: 'Registrierung und Login nur ?ber Google oder Apple.',
+    errorGoogleTokenMissing: 'Google-Token nicht gefunden',
+    errorGoogleLogin: 'Fehler bei der Google-Anmeldung',
+    errorGoogleOpen: 'Fehler beim ?ffnen des Google-Logins',
+    errorAppleTokenMissing: 'Apple-Token nicht gefunden',
+    errorAppleLogin: 'Fehler bei der Apple-Anmeldung',
+    historyEmpty: 'Noch keine Desserts erstellt!\nLass uns das erste erstellen?',
+    dessertCountLabel: 'Desserts',
+  },
+
+  ja: {
+    title: '????????',
+    subtitle: 'AI?????????????????',
+    inputPlaceholder: '??????????: ???????????',
+    buttonText: '??????????',
+    loadingText: '????????...',
+    errorTitle: '?????????????? ??',
+    errorMessage: '????????????????????????',
+    tryAgain: '????',
+    createAnother: '?????????',
+    recipeTitle: '??????',
+    ingredientsTitle: '?? ??',
+    stepsTitle: '????? ???',
+    safetyWarning: '?? ??????????????????',
+    settingsTitle: '?? ??',
+    languageLabel: '??',
+    themeLabel: '???',
+    themeSweets: '????',
+    themeHeroes: '????',
+    login: '????',
+    register: '??',
+    email: '???',
+    password: '?????',
+    name: '??',
+    noAccount: '??????????????',
+    haveAccount: '????????????????',
+    profile: '??????',
+    credits: '?????',
+    plan: '???',
+    premium: '?????',
+    free: '??',
+    upgrade: '???????',
+    upgradeTitle: '???????',
+    upgradeMessage: '??????????????????????????????????',
+    cancel: '?????',
+    confirm: '??',
+    paymentError: '??????????????',
+    logout: '?????',
+    logoutQuestion: '??????????',
+    history: '??',
+    home: '???',
+    creditsLeft: '???????',
+    noCredits: '????????????????',
+    askAdult: '???????????????????',
+    greetingHello: '?????',
+    ingredientsLabel: '?? ??',
+    popularIngredientsLabel: '?????:',
+    oopsTitle: '???!',
+    emptyIngredientsMessage: '????????1??????',
+    recipeNotFound: '???????????',
+    ingredientsTitleHero: '? ??',
+    stepsTitleHero: '?? ???',
+    ok: 'OK',
+    generateErrorDefault: '??????????????????????',
+    generateErrorCredits: '???????????????? ??',
+    generateErrorRateLimit: '?????????????????',
+    errorShort: '???',
+    continueWithGoogle: 'Google???',
+    authProvidersOnly: '????????Google???Apple???',
+    errorGoogleTokenMissing: 'Google????????????',
+    errorGoogleLogin: 'Google?????????????',
+    errorGoogleOpen: 'Google?????????????',
+    errorAppleTokenMissing: 'Apple????????????',
+    errorAppleLogin: 'Apple?????????????',
+    historyEmpty: '?????????????\n???????????',
+    dessertCountLabel: '????',
   },
 };
 
@@ -298,7 +498,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('pt');
   const [theme, setThemeState] = useState<Theme>('feminine');
-  const supportedLanguages: Language[] = ['pt', 'en', 'es', 'fr', 'de'];
+  const supportedLanguages: Language[] = ['pt', 'en', 'es', 'fr', 'de', 'ja'];
 
   const resolveDeviceLanguage = (): Language => {
     const locale = Localization.locale || 'en';

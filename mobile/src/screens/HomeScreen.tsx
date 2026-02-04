@@ -23,7 +23,12 @@ import { getThemeColors, fonts, spacing, borderRadius, shadows } from '../utils/
 const POPULAR_INGREDIENTS = {
   pt: ['chocolate', 'morango', 'leite condensado', 'banana', 'baunilha', 'caramelo'],
   en: ['chocolate', 'strawberry', 'condensed milk', 'banana', 'vanilla', 'caramel'],
+  es: ['chocolate', 'fresa', 'leche condensada', 'banana', 'vainilla', 'caramelo'],
+  fr: ['chocolat', 'fraise', 'lait concentr?', 'banane', 'vanille', 'caramel'],
+  de: ['Schokolade', 'Erdbeere', 'Kondensmilch', 'Banane', 'Vanille', 'Karamell'],
+  ja: ['??????', '???', '??', '???', '???', '?????'],
 };
+
 
 export function HomeScreen() {
   const [ingredients, setIngredients] = useState('');
@@ -36,8 +41,8 @@ export function HomeScreen() {
   const handleGenerate = () => {
     if (!ingredients.trim()) {
       Alert.alert(
-        language === 'pt' ? 'Ops!' : 'Oops!',
-        language === 'pt' ? 'Digite pelo menos um ingrediente' : 'Enter at least one ingredient'
+        t.oopsTitle,
+        t.emptyIngredientsMessage
       );
       return;
     }
@@ -75,7 +80,7 @@ export function HomeScreen() {
           <View style={styles.header}>
             <View>
               <Text style={[styles.greeting, { color: themeColors.textSecondary }]}>
-                {language === 'pt' ? 'Olá' : 'Hello'} {user?.name || ''}! 👋
+                {t.greetingHello} {user?.name || ''}! 👋
               </Text>
               <View style={styles.creditsContainer}>
                 <Text style={[styles.credits, { color: themeColors.primary }]}>
@@ -117,7 +122,7 @@ export function HomeScreen() {
           {/* Input de ingredientes */}
           <View style={[styles.inputCard, { backgroundColor: themeColors.card }, shadows.md]}>
             <Input
-              label={language === 'pt' ? '🍭 Ingredientes' : '🍭 Ingredients'}
+              label={t.ingredientsLabel}
               value={ingredients}
               onChangeText={setIngredients}
               placeholder={t.inputPlaceholder}
@@ -128,7 +133,7 @@ export function HomeScreen() {
 
             {/* Ingredientes populares */}
             <Text style={[styles.popularTitle, { color: themeColors.textSecondary }]}>
-              {language === 'pt' ? 'Ingredientes populares:' : 'Popular ingredients:'}
+              {t.popularIngredientsLabel}
             </Text>
             <View style={styles.popularContainer}>
               {popularIngredients.map((ingredient, index) => (
