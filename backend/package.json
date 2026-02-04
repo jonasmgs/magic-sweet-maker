@@ -4,6 +4,7 @@
   "description": "API para o Gerador de Sobremesas Mágicas Infantis com Gemini AI",
   "main": "src/server.js",
   "scripts": {
+    "prestart": "node src/config/migrate.js",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node src/config/migrate.js",

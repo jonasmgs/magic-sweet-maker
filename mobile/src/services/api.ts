@@ -1,16 +1,34 @@
 /**
- * Serviço de API
+ * ServiÃ§o de API
  *
- * Gerencia todas as chamadas à API do backend.
+ * Gerencia todas as chamadas Ã  API do backend.
  */
 
 import axios, { AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 
-// URL do backend (alterar em produção)
-const API_URL = 'http://localhost:3000/api';
+// URL do backend (configurÃ¡vel via app.json -> extra.apiUrl)
+const getApiUrl = () => {
+  const extraApiUrl =
+    Constants.expoConfig?.extra?.apiUrl ||
+    (Constants as any).manifest?.extra?.apiUrl ||
+    (Constants as any).manifest2?.extra?.apiUrl;
 
-// Criar instância do axios
+  if (typeof extraApiUrl === 'string' && extraApiUrl.trim().length > 0) {
+    const trimmed = extraApiUrl.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    return `https://${trimmed}`;
+  }
+
+  return 'https://magic-sweet-maker-1.onrender.com/api';
+};
+
+const API_URL = getApiUrl();
+
+// Criar instÃ¢ncia do axios
 const api = axios.create({
   baseURL: API_URL,
   timeout: 30000,
@@ -97,7 +115,7 @@ export interface GenerateResponse {
   fromCache?: boolean;
 }
 
-// Funções de autenticação
+// FunÃ§Ãµes de autenticaÃ§Ã£o
 export const authService = {
   async register(email: string, password: string, name?: string, deviceId?: string): Promise<AuthResponse> {
     const response = await api.post('/auth/register', { email, password, name, deviceId });
@@ -119,7 +137,7 @@ export const authService = {
   },
 };
 
-// Funções de sobremesas
+// FunÃ§Ãµes de sobremesas
 export const dessertService = {
   async generate(ingredients: string, theme: 'feminine' | 'masculine' = 'feminine', language: 'pt' | 'en' = 'pt'): Promise<GenerateResponse> {
     const response = await api.post('/desserts/generate', { ingredients, theme, language });
@@ -142,7 +160,7 @@ export const dessertService = {
   },
 };
 
-// Funções de usuário
+// FunÃ§Ãµes de usuÃ¡rio
 export const userService = {
   async getProfile() {
     const response = await api.get('/users/profile');

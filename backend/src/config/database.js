@@ -7,7 +7,11 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, '../../database.sqlite');
+const DB_PATH =
+  process.env.DATABASE_PATH ||
+  (process.env.NODE_ENV === 'production'
+    ? path.join('/tmp', 'database.sqlite')
+    : path.join(__dirname, '../../database.sqlite'));
 
 let db = null;
 
