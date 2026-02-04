@@ -16,7 +16,8 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.magicsweetmaker.app"
+      "bundleIdentifier": "com.magicsweetmaker.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -29,7 +30,13 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiUrl": "https://magic-sweet-maker-1.onrender.com/api"
-    }
+      "apiUrl": "https://magic-sweet-maker-1.onrender.com/api",
+      "googleClientIdIos": "SEU_GOOGLE_CLIENT_ID_IOS",
+      "googleClientIdAndroid": "SEU_GOOGLE_CLIENT_ID_ANDROID",
+      "googleClientIdWeb": "SEU_GOOGLE_CLIENT_ID_WEB"
+    },
+    "plugins": [
+      "expo-apple-authentication"
+    ]
   }
 }

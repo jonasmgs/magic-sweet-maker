@@ -16,6 +16,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: (idToken: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithApple: (idToken: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateCredits: (credits: number) => void;
@@ -115,6 +117,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async (idToken: string) => {
+    try {
+      const deviceId = await getDeviceId();
+      const response = await authService.loginWithGoogle(idToken, deviceId);
+
+      if (response.success) {
+        await SecureStore.setItemAsync('accessToken', response.accessToken);
+        await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+        setUser(response.user);
+        return { success: true };
+      }
+
+      return { success: false, error: 'Erro ao fazer login com Google' };
+    } catch (error: any) {
+      const message = error.response?.data?.error || 'Erro ao fazer login com Google';
+      return { success: false, error: message };
+    }
+  };
+
+  const loginWithApple = async (idToken: string) => {
+    try {
+      const deviceId = await getDeviceId();
+      const response = await authService.loginWithApple(idToken, deviceId);
+
+      if (response.success) {
+        await SecureStore.setItemAsync('accessToken', response.accessToken);
+        await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+        setUser(response.user);
+        return { success: true };
+      }
+
+      return { success: false, error: 'Erro ao fazer login com Apple' };
+    } catch (error: any) {
+      const message = error.response?.data?.error || 'Erro ao fazer login com Apple';
+      return { success: false, error: message };
+    }
+  };
+
   const refreshUser = async () => {
     try {
       const response = await authService.me();
@@ -138,6 +178,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     login,
     register,
+    loginWithGoogle,
+    loginWithApple,
     logout,
     refreshUser,
     updateCredits,

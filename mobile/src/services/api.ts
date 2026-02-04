@@ -127,6 +127,16 @@ export const authService = {
     return response.data;
   },
 
+  async loginWithGoogle(idToken: string, deviceId?: string): Promise<AuthResponse> {
+    const response = await api.post('/auth/google', { idToken, deviceId });
+    return response.data;
+  },
+
+  async loginWithApple(idToken: string, deviceId?: string): Promise<AuthResponse> {
+    const response = await api.post('/auth/apple', { idToken, deviceId });
+    return response.data;
+  },
+
   async me(): Promise<{ success: boolean; user: User }> {
     const response = await api.get('/auth/me');
     return response.data;

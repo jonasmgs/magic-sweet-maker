@@ -1,5 +1,5 @@
 /**
- * Rotas de Autenticação
+ * Rotas de AutenticaÃ§Ã£o
  */
 
 const express = require('express');
@@ -10,39 +10,42 @@ const authController = require('../controllers/authController');
 const { authenticate } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 
-// POST /api/auth/register - Cadastro
-router.post('/register',
+// POST /api/auth/register - Cadastro (desativado)
+router.post('/register', authController.register);
+
+// POST /api/auth/login - Login (desativado)
+router.post('/login', authController.login);
+
+// POST /api/auth/google - Login/Cadastro Google
+router.post('/google',
   [
-    body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
-    body('password').isLength({ min: 6 }).withMessage('Senha deve ter pelo menos 6 caracteres'),
-    body('name').optional().trim().isLength({ min: 2 }).withMessage('Nome deve ter pelo menos 2 caracteres'),
+    body('idToken').notEmpty().withMessage('Token Google Ã© obrigatÃ³rio'),
     body('deviceId').optional().isString()
   ],
   validate,
-  authController.register
+  authController.googleAuth
 );
 
-// POST /api/auth/login - Login
-router.post('/login',
+// POST /api/auth/apple - Login/Cadastro Apple
+router.post('/apple',
   [
-    body('email').isEmail().normalizeEmail().withMessage('Email inválido'),
-    body('password').notEmpty().withMessage('Senha é obrigatória'),
+    body('idToken').notEmpty().withMessage('Token Apple Ã© obrigatÃ³rio'),
     body('deviceId').optional().isString()
   ],
   validate,
-  authController.login
+  authController.appleAuth
 );
 
 // POST /api/auth/refresh - Renovar token
 router.post('/refresh',
   [
-    body('refreshToken').notEmpty().withMessage('Refresh token é obrigatório')
+    body('refreshToken').notEmpty().withMessage('Refresh token Ã© obrigatÃ³rio')
   ],
   validate,
   authController.refreshToken
 );
 
-// GET /api/auth/me - Dados do usuário atual
+// GET /api/auth/me - Dados do usuÃ¡rio atual
 router.get('/me', authenticate, authController.me);
 
 // POST /api/auth/logout - Logout

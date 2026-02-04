@@ -89,6 +89,10 @@ DATABASE_PATH=./database.sqlite
 SUPABASE_URL=https://seu-projeto.supabase.co
 SUPABASE_ANON_KEY=sua_anon_key
 
+# Google/Apple Auth
+GOOGLE_CLIENT_ID=seu_google_client_id
+APPLE_CLIENT_ID=seu_apple_client_id
+
 # Google Gemini API
 GEMINI_API_KEY=sua-api-key-do-gemini
 

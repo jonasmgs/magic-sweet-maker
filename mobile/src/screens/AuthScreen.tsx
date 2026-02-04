@@ -1,8 +1,8 @@
 /**
- * Tela de Autenticação (Login/Cadastro)
+ * Tela de AutenticaÃ§Ã£o (Google/Apple)
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,70 +15,86 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Google from 'expo-auth-session/providers/google';
+import Constants from 'expo-constants';
+
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from '../components/Button';
-import { Input } from '../components/Input';
 import { getThemeColors, fonts, spacing, borderRadius, shadows } from '../utils/theme';
 
-export function AuthScreen() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+WebBrowser.maybeCompleteAuthSession();
 
-  const { login, register } = useAuth();
+export function AuthScreen() {
+  const [loading, setLoading] = useState(false);
+
+  const { loginWithGoogle, loginWithApple } = useAuth();
   const { theme, t, language, setLanguage, setTheme } = useLanguage();
   const themeColors = getThemeColors(theme);
   const isMasculine = theme === 'masculine';
 
-  const validate = () => {
-    const newErrors: typeof errors = {};
+  const googleClientIdIos = Constants.expoConfig?.extra?.googleClientIdIos;
+  const googleClientIdAndroid = Constants.expoConfig?.extra?.googleClientIdAndroid;
+  const googleClientIdWeb = Constants.expoConfig?.extra?.googleClientIdWeb;
 
-    if (!email) {
-      newErrors.email = language === 'pt' ? 'Email é obrigatório' : 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = language === 'pt' ? 'Email inválido' : 'Invalid email';
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: googleClientIdIos,
+    androidClientId: googleClientIdAndroid,
+    webClientId: googleClientIdWeb,
+  });
+
+  useEffect(() => {
+    const handleGoogleResponse = async () => {
+      if (response?.type === 'success') {
+        const idToken = (response.authentication as any)?.idToken || (response.params as any)?.id_token;
+        if (!idToken) {
+          Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Token do Google nÃ£o encontrado');
+          return;
+        }
+        setLoading(true);
+        const result = await loginWithGoogle(idToken);
+        if (!result.success) {
+          Alert.alert(language === 'pt' ? 'Erro' : 'Error', result.error || 'Erro ao entrar com Google');
+        }
+        setLoading(false);
+      }
+    };
+
+    handleGoogleResponse();
+  }, [response, language, loginWithGoogle]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      await promptAsync();
+    } catch {
+      Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Erro ao abrir login do Google');
     }
-
-    if (!password) {
-      newErrors.password = language === 'pt' ? 'Senha é obrigatória' : 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = language === 'pt' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters';
-    }
-
-    if (!isLogin && !name) {
-      newErrors.name = language === 'pt' ? 'Nome é obrigatório' : 'Name is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
-    if (!validate()) return;
-
-    setLoading(true);
+  const handleAppleLogin = async () => {
     try {
-      const result = isLogin
-        ? await login(email, password)
-        : await register(email, password, name);
-
-      if (!result.success) {
-        Alert.alert(
-          language === 'pt' ? 'Erro' : 'Error',
-          result.error || (language === 'pt' ? 'Algo deu errado' : 'Something went wrong')
-        );
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (!credential.identityToken) {
+        Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Token da Apple nÃ£o encontrado');
+        return;
       }
-    } catch (error) {
-      Alert.alert(
-        language === 'pt' ? 'Erro' : 'Error',
-        language === 'pt' ? 'Erro ao conectar com o servidor' : 'Error connecting to server'
-      );
-    } finally {
+      setLoading(true);
+      const result = await loginWithApple(credential.identityToken);
+      if (!result.success) {
+        Alert.alert(language === 'pt' ? 'Erro' : 'Error', result.error || 'Erro ao entrar com Apple');
+      }
       setLoading(false);
+    } catch (err: any) {
+      if (err?.code !== 'ERR_CANCELED') {
+        Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Erro ao entrar com Apple');
+      }
     }
   };
 
@@ -92,24 +108,21 @@ export function AuthScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Header com opções */}
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {/* Header com opÃ§Ãµes */}
             <View style={styles.header}>
               <View style={styles.languageButtons}>
                 <TouchableOpacity
                   onPress={() => setLanguage('pt')}
                   style={[styles.langButton, language === 'pt' && styles.langButtonActive]}
                 >
-                  <Text style={styles.langText}>🇧🇷 PT</Text>
+                  <Text style={styles.langText}>ðŸ‡§ðŸ‡· PT</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setLanguage('en')}
                   style={[styles.langButton, language === 'en' && styles.langButtonActive]}
                 >
-                  <Text style={styles.langText}>🇺🇸 EN</Text>
+                  <Text style={styles.langText}>ðŸ‡ºðŸ‡¸ EN</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.themeButtons}>
@@ -117,87 +130,64 @@ export function AuthScreen() {
                   onPress={() => setTheme('feminine')}
                   style={[styles.themeButton, theme === 'feminine' && styles.themeButtonActive]}
                 >
-                  <Text style={styles.themeText}>🧁</Text>
+                  <Text style={styles.themeText}>ðŸ§</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setTheme('masculine')}
                   style={[styles.themeButton, theme === 'masculine' && styles.themeButtonActive]}
                 >
-                  <Text style={styles.themeText}>🦸</Text>
+                  <Text style={styles.themeText}>ðŸ¦¸</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Logo e Título */}
+            {/* Logo e TÃ­tulo */}
             <View style={styles.logoContainer}>
-              <Text style={styles.logo}>{isMasculine ? '🦸‍♂️' : '🧁'}</Text>
+              <Text style={styles.logo}>{isMasculine ? 'ðŸ¦¸â€â™‚ï¸' : 'ðŸ§'}</Text>
               <Text style={[styles.title, { color: '#FFFFFF' }]}>{t.title}</Text>
               <Text style={[styles.subtitle, { color: 'rgba(255,255,255,0.8)' }]}>
                 {t.subtitle}
               </Text>
             </View>
 
-            {/* Formulário */}
+            {/* Login Social */}
             <View style={[styles.form, { backgroundColor: themeColors.card }, shadows.lg]}>
               <Text style={[styles.formTitle, { color: themeColors.text }]}>
-                {isLogin ? t.login : t.register}
+                {language === 'pt' ? 'Entrar' : 'Sign in'}
               </Text>
 
-              {!isLogin && (
-                <Input
-                  label={t.name}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder={language === 'pt' ? 'Seu nome' : 'Your name'}
-                  error={errors.name}
-                  autoCapitalize="words"
-                />
-              )}
-
-              <Input
-                label={t.email}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="email@exemplo.com"
-                error={errors.email}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-
-              <Input
-                label={t.password}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="••••••"
-                error={errors.password}
-                secureTextEntry
-              />
-
               <Button
-                title={isLogin ? t.login : t.register}
-                onPress={handleSubmit}
+                title={language === 'pt' ? 'Continuar com Google' : 'Continue with Google'}
+                onPress={handleGoogleLogin}
                 loading={loading}
-                icon={isMasculine ? '⚡' : '✨'}
+                icon="G"
                 size="lg"
                 style={styles.submitButton}
+                disabled={!request}
               />
 
-              <TouchableOpacity
-                onPress={() => {
-                  setIsLogin(!isLogin);
-                  setErrors({});
-                }}
-                style={styles.switchButton}
-              >
-                <Text style={[styles.switchText, { color: themeColors.primary }]}>
-                  {isLogin ? t.noAccount : t.haveAccount}
-                </Text>
-              </TouchableOpacity>
+              {Platform.OS === 'ios' && (
+                <View style={styles.appleButtonWrapper}>
+                  <AppleAuthentication.AppleAuthenticationButton
+                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                    cornerRadius={12}
+                    style={styles.appleButton}
+                    onPress={handleAppleLogin}
+                  />
+                </View>
+              )}
+
+              <Text style={[styles.helperText, { color: themeColors.textSecondary }]}>
+                {language === 'pt'
+                  ? 'Cadastro e login somente via Google ou Apple.'
+                  : 'Sign up and sign in only via Google or Apple.'}
+              </Text>
             </View>
 
             {/* Emojis decorativos */}
             <View style={styles.emojisContainer}>
-              {(isMasculine ? ['⚡', '💪', '🔥', '⭐', '🌟'] : ['🍰', '🍭', '🍫', '🍓', '🍦']).map(
+              {(isMasculine ? ['âš¡', 'ðŸ’ª', 'ðŸ”¥', 'â­', 'ðŸŒŸ'] : ['ðŸ°', 'ðŸ­', 'ðŸ«', 'ðŸ“', 'ðŸ¦']).map(
                 (emoji, index) => (
                   <Text key={index} style={styles.decorEmoji}>
                     {emoji}
@@ -299,12 +289,16 @@ const styles = StyleSheet.create({
   submitButton: {
     marginTop: spacing.md,
   },
-  switchButton: {
-    marginTop: spacing.lg,
-    alignItems: 'center',
+  appleButtonWrapper: {
+    marginTop: spacing.md,
   },
-  switchText: {
-    fontSize: fonts.sizes.md,
+  appleButton: {
+    width: '100%',
+    height: 48,
+  },
+  helperText: {
+    marginTop: spacing.md,
+    textAlign: 'center',
   },
   emojisContainer: {
     flexDirection: 'row',

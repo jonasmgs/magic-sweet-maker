@@ -1,11 +1,14 @@
 /**
- * Controller de Autenticação
+ * Controller de AutenticaÃ§Ã£o
  *
- * Gerencia cadastro, login, refresh de tokens e dados do usuário.
+ * Gerencia cadastro, login, refresh de tokens e dados do usuÃ¡rio.
+ * Email/senha desativado. Apenas Google e Apple.
  */
 
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const { OAuth2Client } = require('google-auth-library');
+const appleSigninAuth = require('apple-signin-auth');
 const User = require('../models/User');
 const UsageLog = require('../models/UsageLog');
 const { runQuery, getOne } = require('../config/database');
@@ -13,6 +16,10 @@ const { runQuery, getOne } = require('../config/database');
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-me';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || '';
+
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
 /**
  * Gera tokens JWT
@@ -34,138 +41,167 @@ function generateTokens(user) {
 }
 
 /**
- * Cadastro de novo usuário
+ * Cadastro via email/senha desativado
  */
 async function register(req, res) {
-  try {
-    const { email, password, name, deviceId } = req.body;
-    const ipAddress = req.ip;
-
-    // Verificar se email já existe
-    if (await User.emailExists(email)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email já cadastrado'
-      });
-    }
-
-    // Verificar múltiplas contas por dispositivo
-    if (deviceId) {
-      const existingDevice = await User.findByDeviceId(deviceId);
-      if (existingDevice) {
-        return res.status(400).json({
-          success: false,
-          error: 'Já existe uma conta neste dispositivo'
-        });
-      }
-    }
-
-    // Criar usuário
-    const user = await User.create({
-      email: email.toLowerCase(),
-      password,
-      name,
-      deviceId
-    });
-
-    // Gerar tokens
-    const tokens = generateTokens(user);
-
-    // Salvar refresh token
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
-
-    await runQuery(`
-      INSERT INTO refresh_tokens (user_id, token, expires_at)
-      VALUES (?, ?, ?)
-    `, [user.id, tokens.refreshToken, expiresAt.toISOString()]);
-
-    // Registrar log
-    await UsageLog.create({
-      userId: user.id,
-      action: 'register',
-      details: { deviceId },
-      ipAddress
-    });
-
-    res.status(201).json({
-      success: true,
-      user: User.sanitize(user),
-      ...tokens
-    });
-  } catch (error) {
-    console.error('Erro no registro:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Erro ao criar conta'
-    });
-  }
+  return res.status(403).json({
+    success: false,
+    error: 'Cadastro desativado. Use Google ou Apple.'
+  });
 }
 
 /**
- * Login de usuário
+ * Login via email/senha desativado
  */
 async function login(req, res) {
+  return res.status(403).json({
+    success: false,
+    error: 'Login por email/senha desativado. Use Google ou Apple.'
+  });
+}
+
+/**
+ * Login/Cadastro via Google
+ */
+async function googleAuth(req, res) {
   try {
-    const { email, password, deviceId } = req.body;
+    const { idToken, deviceId } = req.body;
     const ipAddress = req.ip;
 
-    // Buscar usuário
-    const user = await User.findByEmail(email);
+    if (!idToken || !googleClient) {
+      return res.status(400).json({
+        success: false,
+        error: 'Google auth indisponÃ­vel'
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      return res.status(401).json({
+        success: false,
+        error: 'Token Google invÃ¡lido'
+      });
+    }
+
+    const email = payload.email.toLowerCase();
+    const name = payload.name || null;
+
+    let user = await User.findByEmail(email);
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Email ou senha inválidos'
+      user = await User.create({
+        email,
+        password: uuidv4(),
+        name,
+        deviceId
       });
-    }
-
-    // Verificar senha
-    const validPassword = await User.verifyPassword(user, password);
-    if (!validPassword) {
-      return res.status(401).json({
-        success: false,
-        error: 'Email ou senha inválidos'
-      });
-    }
-
-    // Atualizar device ID se fornecido
-    if (deviceId && user.device_id !== deviceId) {
+    } else if (deviceId && user.device_id !== deviceId) {
       await User.updateDeviceId(user.id, deviceId);
     }
 
-    // Verificar e renovar créditos se necessário
     const updatedUser = await User.checkAndRenewCredits(user.id);
-
-    // Gerar tokens
     const tokens = generateTokens(updatedUser);
 
-    // Salvar refresh token
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
-
     await runQuery(`
       INSERT INTO refresh_tokens (user_id, token, expires_at)
       VALUES (?, ?, ?)
-    `, [user.id, tokens.refreshToken, expiresAt.toISOString()]);
+    `, [updatedUser.id, tokens.refreshToken, expiresAt.toISOString()]);
 
-    // Registrar log
     await UsageLog.create({
-      userId: user.id,
-      action: 'login',
+      userId: updatedUser.id,
+      action: 'login_google',
       details: { deviceId },
       ipAddress
     });
 
-    res.json({
+    return res.json({
       success: true,
       user: updatedUser,
       ...tokens
     });
   } catch (error) {
-    console.error('Erro no login:', error);
-    res.status(500).json({
+    console.error('Erro no Google login:', error);
+    return res.status(500).json({
       success: false,
-      error: 'Erro ao fazer login'
+      error: 'Erro ao autenticar com Google'
+    });
+  }
+}
+
+/**
+ * Login/Cadastro via Apple
+ */
+async function appleAuth(req, res) {
+  try {
+    const { idToken, deviceId } = req.body;
+    const ipAddress = req.ip;
+
+    if (!idToken || !APPLE_CLIENT_ID) {
+      return res.status(400).json({
+        success: false,
+        error: 'Apple auth indisponÃ­vel'
+      });
+    }
+
+    const payload = await appleSigninAuth.verifyIdToken(idToken, {
+      audience: APPLE_CLIENT_ID
+    });
+
+    if (!payload || !payload.email) {
+      return res.status(401).json({
+        success: false,
+        error: 'Token Apple invÃ¡lido'
+      });
+    }
+
+    const email = payload.email.toLowerCase();
+    const name = payload.name || null;
+
+    let user = await User.findByEmail(email);
+    if (!user) {
+      user = await User.create({
+        email,
+        password: uuidv4(),
+        name,
+        deviceId
+      });
+    } else if (deviceId && user.device_id !== deviceId) {
+      await User.updateDeviceId(user.id, deviceId);
+    }
+
+    const updatedUser = await User.checkAndRenewCredits(user.id);
+    const tokens = generateTokens(updatedUser);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+    await runQuery(`
+      INSERT INTO refresh_tokens (user_id, token, expires_at)
+      VALUES (?, ?, ?)
+    `, [updatedUser.id, tokens.refreshToken, expiresAt.toISOString()]);
+
+    await UsageLog.create({
+      userId: updatedUser.id,
+      action: 'login_apple',
+      details: { deviceId },
+      ipAddress
+    });
+
+    return res.json({
+      success: true,
+      user: updatedUser,
+      ...tokens
+    });
+  } catch (error) {
+    console.error('Erro no Apple login:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao autenticar com Apple'
     });
   }
 }
@@ -180,7 +216,7 @@ async function refreshToken(req, res) {
     if (!refreshToken) {
       return res.status(400).json({
         success: false,
-        error: 'Refresh token não fornecido'
+        error: 'Refresh token nÃ£o fornecido'
       });
     }
 
@@ -191,7 +227,7 @@ async function refreshToken(req, res) {
     } catch (err) {
       return res.status(401).json({
         success: false,
-        error: 'Token inválido ou expirado'
+        error: 'Token invÃ¡lido ou expirado'
       });
     }
 
@@ -204,11 +240,11 @@ async function refreshToken(req, res) {
     if (!storedToken) {
       return res.status(401).json({
         success: false,
-        error: 'Token não encontrado'
+        error: 'Token nÃ£o encontrado'
       });
     }
 
-    // Verificar se token não expirou
+    // Verificar se token nÃ£o expirou
     if (new Date(storedToken.expires_at) < new Date()) {
       await runQuery('DELETE FROM refresh_tokens WHERE id = ?', [storedToken.id]);
       return res.status(401).json({
@@ -217,12 +253,12 @@ async function refreshToken(req, res) {
       });
     }
 
-    // Buscar usuário atualizado
+    // Buscar usuÃ¡rio atualizado
     const user = await User.checkAndRenewCredits(decoded.userId);
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: 'Usuário não encontrado'
+        error: 'UsuÃ¡rio nÃ£o encontrado'
       });
     }
 
@@ -253,7 +289,7 @@ async function refreshToken(req, res) {
 }
 
 /**
- * Obter dados do usuário atual
+ * Obter dados do usuÃ¡rio atual
  */
 async function me(req, res) {
   try {
@@ -261,7 +297,7 @@ async function me(req, res) {
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: 'Usuário não encontrado'
+        error: 'UsuÃ¡rio nÃ£o encontrado'
       });
     }
 
@@ -270,10 +306,10 @@ async function me(req, res) {
       user
     });
   } catch (error) {
-    console.error('Erro ao buscar usuário:', error);
+    console.error('Erro ao buscar usuÃ¡rio:', error);
     res.status(500).json({
       success: false,
-      error: 'Erro ao buscar dados do usuário'
+      error: 'Erro ao buscar dados do usuÃ¡rio'
     });
   }
 }
@@ -312,6 +348,8 @@ async function logout(req, res) {
 module.exports = {
   register,
   login,
+  googleAuth,
+  appleAuth,
   refreshToken,
   me,
   logout
