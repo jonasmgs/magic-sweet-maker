@@ -9,6 +9,7 @@ const authRoutes = require('./auth');
 const dessertRoutes = require('./desserts');
 const userRoutes = require('./users');
 const adminRoutes = require('./admin');
+const telegramRoutes = require('./telegram');
 
 // Health check
 router.get('/health', (req, res) => {
@@ -72,5 +73,6 @@ router.use('/auth', authRoutes);
 router.use('/desserts', dessertRoutes);
 router.use('/users', userRoutes);
 router.use('/admin', adminRoutes);
+router.use('/telegram', telegramRoutes);
 
 module.exports = router;
