@@ -1,5 +1,5 @@
 /**
- * Tela de AutenticaÃ§Ã£o (Google/Apple)
+ * Tela de Autenticação (Google/Apple)
  */
 
 import React, { useEffect, useState } from 'react';
@@ -50,7 +50,7 @@ export function AuthScreen() {
       if (response?.type === 'success') {
         const idToken = (response.authentication as any)?.idToken || (response.params as any)?.id_token;
         if (!idToken) {
-          Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Token do Google nÃ£o encontrado');
+          Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Token do Google não encontrado');
           return;
         }
         setLoading(true);
@@ -82,7 +82,7 @@ export function AuthScreen() {
         ],
       });
       if (!credential.identityToken) {
-        Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Token da Apple nÃ£o encontrado');
+        Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Token da Apple não encontrado');
         return;
       }
       setLoading(true);
@@ -109,20 +109,20 @@ export function AuthScreen() {
           style={styles.keyboardView}
         >
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {/* Header com opÃ§Ãµes */}
+            {/* Header com opções */}
             <View style={styles.header}>
               <View style={styles.languageButtons}>
                 <TouchableOpacity
                   onPress={() => setLanguage('pt')}
                   style={[styles.langButton, language === 'pt' && styles.langButtonActive]}
                 >
-                  <Text style={styles.langText}>ðŸ‡§ðŸ‡· PT</Text>
+                  <Text style={styles.langText}>🇧🇷 PT</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setLanguage('en')}
                   style={[styles.langButton, language === 'en' && styles.langButtonActive]}
                 >
-                  <Text style={styles.langText}>ðŸ‡ºðŸ‡¸ EN</Text>
+                  <Text style={styles.langText}>🇺🇸 EN</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.themeButtons}>
@@ -130,20 +130,20 @@ export function AuthScreen() {
                   onPress={() => setTheme('feminine')}
                   style={[styles.themeButton, theme === 'feminine' && styles.themeButtonActive]}
                 >
-                  <Text style={styles.themeText}>ðŸ§</Text>
+                  <Text style={styles.themeText}>🧁</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setTheme('masculine')}
                   style={[styles.themeButton, theme === 'masculine' && styles.themeButtonActive]}
                 >
-                  <Text style={styles.themeText}>ðŸ¦¸</Text>
+                  <Text style={styles.themeText}>🦸</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Logo e TÃ­tulo */}
+            {/* Logo e Título */}
             <View style={styles.logoContainer}>
-              <Text style={styles.logo}>{isMasculine ? 'ðŸ¦¸â€â™‚ï¸' : 'ðŸ§'}</Text>
+              <Text style={styles.logo}>{isMasculine ? '🦸‍♂️' : '🧁'}</Text>
               <Text style={[styles.title, { color: '#FFFFFF' }]}>{t.title}</Text>
               <Text style={[styles.subtitle, { color: 'rgba(255,255,255,0.8)' }]}>
                 {t.subtitle}
@@ -187,7 +187,7 @@ export function AuthScreen() {
 
             {/* Emojis decorativos */}
             <View style={styles.emojisContainer}>
-              {(isMasculine ? ['âš¡', 'ðŸ’ª', 'ðŸ”¥', 'â­', 'ðŸŒŸ'] : ['ðŸ°', 'ðŸ­', 'ðŸ«', 'ðŸ“', 'ðŸ¦']).map(
+              {(isMasculine ? ['⚡', '💪', '🔥', '⭐', '🌟'] : ['🍰', '🍭', '🍫', '🍓', '🍦']).map(
                 (emoji, index) => (
                   <Text key={index} style={styles.decorEmoji}>
                     {emoji}
