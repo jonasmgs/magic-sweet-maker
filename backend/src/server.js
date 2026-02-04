@@ -18,6 +18,8 @@ const { getDatabase } = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 // Inicializar banco de dados
 getDatabase();
@@ -42,6 +44,37 @@ app.use(globalLimiter);
 
 // Trust proxy (para rate limiting correto atrás de proxies)
 app.set('trust proxy', 1);
+
+// Supabase keep-alive while server is running (useful during development)
+const keepAliveMs = Number(process.env.SUPABASE_KEEP_ALIVE_MS || 12 * 60 * 1000);
+const startSupabaseKeepAlive = () => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return null;
+  }
+  if (!Number.isFinite(keepAliveMs) || keepAliveMs <= 0) {
+    return null;
+  }
+
+  const healthUrl = `${SUPABASE_URL.replace(/\/$/, '')}/auth/v1/health`;
+
+  const ping = async () => {
+    try {
+      await fetch(healthUrl, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+    } catch {
+      // Ignore errors to avoid breaking development flow
+    }
+  };
+
+  ping();
+  return setInterval(ping, keepAliveMs);
+};
+
+const keepAliveTimer = startSupabaseKeepAlive();
 
 // Logging simples
 app.use((req, res, next) => {
@@ -96,6 +129,9 @@ app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('🛑 Recebido SIGTERM. Encerrando servidor...');
+  if (keepAliveTimer) {
+    clearInterval(keepAliveTimer);
+  }
   const { closeDatabase } = require('./config/database');
   await closeDatabase();
   process.exit(0);
@@ -103,6 +139,9 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   console.log('🛑 Recebido SIGINT. Encerrando servidor...');
+  if (keepAliveTimer) {
+    clearInterval(keepAliveTimer);
+  }
   const { closeDatabase } = require('./config/database');
   await closeDatabase();
   process.exit(0);

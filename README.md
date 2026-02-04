@@ -85,6 +85,12 @@ JWT_REFRESH_EXPIRES_IN=30d
 # Banco de Dados
 DATABASE_PATH=./database.sqlite
 
+# Supabase (keep-alive)
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_ANON_KEY=sua_anon_key
+# Intervalo do ping em ms (0 para desativar)
+SUPABASE_KEEP_ALIVE_MS=720000
+
 # Google Gemini API
 GEMINI_API_KEY=sua-api-key-do-gemini
 
