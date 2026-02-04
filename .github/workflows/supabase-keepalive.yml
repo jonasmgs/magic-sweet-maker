@@ -8,36 +8,13 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-    env:
-      BACKEND_HEALTH_URL: ${{ secrets.BACKEND_HEALTH_URL }}
     steps:
       - name: Ping backend Supabase health
+        env:
+          BACKEND_HEALTH_URL: ${{ secrets.BACKEND_HEALTH_URL }}
         run: |
           if [ -z "$BACKEND_HEALTH_URL" ]; then
             echo "BACKEND_HEALTH_URL is not set. Add it in repo secrets."
             exit 1
           fi
           curl -sS -m 15 -o /dev/null -w "%{http_code}\n" "$BACKEND_HEALTH_URL" | grep -E "^(200|204)$"
-      - name: Create issue on failure
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const title = 'Supabase keep-alive failed';
-            const body = `O ping falhou. Verifique o endpoint: ${process.env.BACKEND_HEALTH_URL}`;
-            const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open'
-            });
-            const existing = issues.find(i => i.title === title);
-            if (!existing) {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body
-              });
-            }
