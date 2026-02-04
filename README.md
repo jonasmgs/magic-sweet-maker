@@ -111,8 +111,6 @@ STRIPE_PRICE_ID=price_seu_price_id
 STRIPE_SUCCESS_URL=https://seusite.com/pagamento/sucesso
 STRIPE_CANCEL_URL=https://seusite.com/pagamento/cancelado
 
-# Telegram bot
-TELEGRAM_BOT_TOKEN=seu_token_do_botfather
 ```
 
 ### Obter API Key do Gemini
