@@ -3,7 +3,12 @@ name: Supabase Keep-Alive
 on:
   schedule:
     - cron: "*/10 * * * *"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      test_telegram:
+        description: "Enviar alerta de teste no Telegram"
+        required: false
+        default: "false"
 
 jobs:
   ping:
@@ -53,6 +58,21 @@ jobs:
             exit 0
           fi
           MESSAGE="⚠️ Supabase keep-alive falhou. Verifique: $BACKEND_HEALTH_URL"
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=${MESSAGE}" \
+            -d "disable_web_page_preview=true" >/dev/null
+      - name: Telegram test message
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test_telegram == 'true' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets missing."
+            exit 1
+          fi
+          MESSAGE="✅ Teste: alerta Telegram do keep-alive está funcionando."
           curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
             -d "text=${MESSAGE}" \
