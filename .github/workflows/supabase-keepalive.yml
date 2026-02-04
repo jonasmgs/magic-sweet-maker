@@ -13,6 +13,7 @@ jobs:
         env:
           BACKEND_HEALTH_URL: ${{ vars.BACKEND_HEALTH_URL }}
         run: |
+          BACKEND_HEALTH_URL="$(echo -n "$BACKEND_HEALTH_URL" | tr -d '\r' | xargs)"
           if [ -z "$BACKEND_HEALTH_URL" ]; then
             echo "BACKEND_HEALTH_URL is not set. Add it in repo variables."
             exit 1
