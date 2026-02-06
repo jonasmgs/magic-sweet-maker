@@ -6,7 +6,7 @@
 
 const User = require('../models/User');
 const UsageLog = require('../models/UsageLog');
-const { getAll } = require('../config/database');
+const supabase = require('../config/supabase');
 
 const FREE_CREDITS = parseInt(process.env.FREE_CREDITS) || 3;
 const PREMIUM_CREDITS = parseInt(process.env.PREMIUM_CREDITS) || 100;
@@ -81,11 +81,19 @@ async function addCredits(userId, amount, reason = 'manual') {
  */
 async function renewAllEligible() {
   try {
-    const eligibleUsers = await getAll(`
-      SELECT id FROM users
-      WHERE plan = 'premium'
-      AND date(credits_renewed_at, '+' || ? || ' days') <= date('now')
-    `, [CREDIT_RENEWAL_DAYS]);
+    const dateLimit = new Date();
+    dateLimit.setDate(dateLimit.getDate() - CREDIT_RENEWAL_DAYS);
+
+    const { data: eligibleUsers, error } = await supabase
+      .from('users')
+      .select('id')
+      .eq('plan', 'premium')
+      .lte('credits_renewed_at', dateLimit.toISOString());
+
+    if (error) {
+      console.error('Erro ao buscar usuários para renovação:', error);
+      return 0;
+    }
 
     let renewed = 0;
     for (const user of eligibleUsers) {
@@ -93,7 +101,9 @@ async function renewAllEligible() {
       renewed++;
     }
 
-    console.log(`🔄 Créditos renovados para ${renewed} usuários premium`);
+    if (renewed > 0) {
+      console.log(`🔄 Créditos renovados para ${renewed} usuários premium`);
+    }
     return renewed;
   } catch (error) {
     console.error('Erro ao renovar créditos:', error);
@@ -163,3 +173,4 @@ module.exports = {
   PREMIUM_CREDITS,
   CREDIT_RENEWAL_DAYS
 };
+

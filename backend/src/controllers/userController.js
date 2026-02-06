@@ -173,11 +173,13 @@ async function updateProfile(req, res) {
 
     // Atualizar nome se fornecido
     if (name) {
-      const { runQuery } = require('../config/database');
-      await runQuery(
-        'UPDATE users SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-        [name, userId]
-      );
+      const supabase = require('../config/supabase');
+      const { error } = await supabase
+        .from('users')
+        .update({ name, updated_at: new Date() })
+        .eq('id', userId);
+
+      if (error) throw error;
     }
 
     const user = await User.findById(userId);

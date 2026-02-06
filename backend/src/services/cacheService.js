@@ -1,11 +1,11 @@
 /**
  * Serviço de Cache
  *
- * Implementa cache em memória (LRU) e persistente (SQLite).
+ * Implementa cache em memória (LRU) e persistente (Supabase).
  */
 
 const { LRUCache } = require('lru-cache');
-const { runQuery, getOne } = require('../config/database');
+const supabase = require('../config/supabase');
 
 const CACHE_MAX_SIZE = parseInt(process.env.CACHE_MAX_SIZE) || 500;
 const CACHE_TTL_SECONDS = parseInt(process.env.CACHE_TTL_SECONDS) || 86400; // 24 horas
@@ -29,19 +29,31 @@ async function get(key) {
 
   // Verificar cache persistente
   try {
-    const cached = await getOne(
-      'SELECT * FROM cache WHERE cache_key = ? AND expires_at > datetime("now")',
-      [key]
-    );
+    const { data: cached, error } = await supabase
+      .from('cache')
+      .select('*')
+      .eq('cache_key', key)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Erro ao buscar cache:', error);
+    }
 
     if (cached) {
-      const data = JSON.parse(cached.data);
+      let data;
+      try {
+        data = JSON.parse(cached.data);
+      } catch (e) {
+        data = cached.data;
+      }
 
-      // Atualizar hits
-      await runQuery(
-        'UPDATE cache SET hits = hits + 1 WHERE id = ?',
-        [cached.id]
-      );
+      // Atualizar hits (fire and forget)
+      supabase
+        .from('cache')
+        .update({ hits: (cached.hits || 0) + 1 })
+        .eq('id', cached.id)
+        .then(); // no await
 
       // Salvar no cache em memória
       memoryCache.set(key, data);
@@ -50,7 +62,7 @@ async function get(key) {
       return data;
     }
   } catch (error) {
-    console.error('Erro ao buscar cache:', error);
+    console.error('Erro ao buscar cache (exception):', error);
   }
 
   console.log(`📭 Cache miss: ${key.substring(0, 8)}...`);
@@ -69,10 +81,18 @@ async function set(key, data, ttlSeconds = CACHE_TTL_SECONDS) {
     const expiresAt = new Date();
     expiresAt.setSeconds(expiresAt.getSeconds() + ttlSeconds);
 
-    await runQuery(`
-      INSERT OR REPLACE INTO cache (cache_key, data, expires_at)
-      VALUES (?, ?, ?)
-    `, [key, JSON.stringify(data), expiresAt.toISOString()]);
+    const { error } = await supabase
+      .from('cache')
+      .upsert({
+        cache_key: key,
+        data: JSON.stringify(data),
+        expires_at: expiresAt.toISOString()
+      }, { onConflict: 'cache_key' });
+
+    if (error) {
+      console.error('Erro ao salvar cache no Supabase:', error);
+      return false;
+    }
 
     console.log(`💾 Cache set: ${key.substring(0, 8)}...`);
     return true;
@@ -88,7 +108,14 @@ async function set(key, data, ttlSeconds = CACHE_TTL_SECONDS) {
 async function remove(key) {
   try {
     memoryCache.delete(key);
-    await runQuery('DELETE FROM cache WHERE cache_key = ?', [key]);
+
+    const { error } = await supabase
+      .from('cache')
+      .delete()
+      .eq('cache_key', key);
+
+    if (error) throw error;
+
     return true;
   } catch (error) {
     console.error('Erro ao remover cache:', error);
@@ -101,11 +128,15 @@ async function remove(key) {
  */
 async function cleanup() {
   try {
-    const result = await runQuery(
-      'DELETE FROM cache WHERE expires_at < datetime("now")'
-    );
-    console.log(`🧹 Cache cleanup: ${result.changes} itens removidos`);
-    return result.changes;
+    const { count, error } = await supabase
+      .from('cache')
+      .delete({ count: 'exact' })
+      .lt('expires_at', new Date().toISOString());
+
+    if (error) throw error;
+
+    console.log(`🧹 Cache cleanup: ${count} itens removidos`);
+    return count;
   } catch (error) {
     console.error('Erro ao limpar cache:', error);
     return 0;
@@ -117,18 +148,22 @@ async function cleanup() {
  */
 async function getStats() {
   try {
-    const total = await getOne('SELECT COUNT(*) as count FROM cache');
-    const active = await getOne(
-      'SELECT COUNT(*) as count FROM cache WHERE expires_at > datetime("now")'
-    );
-    const totalHits = await getOne('SELECT SUM(hits) as total FROM cache');
+    const { count: total } = await supabase.from('cache').select('*', { count: 'exact', head: true });
+
+    const { count: active } = await supabase
+      .from('cache')
+      .select('*', { count: 'exact', head: true })
+      .gt('expires_at', new Date().toISOString());
+
+    // Summing hits is expensive without aggregate support. Skipping for now.
+    const totalHits = 0;
 
     return {
       memorySize: memoryCache.size,
       memoryMaxSize: CACHE_MAX_SIZE,
-      dbTotal: total.count,
-      dbActive: active.count,
-      totalHits: totalHits.total || 0
+      dbTotal: total || 0,
+      dbActive: active || 0,
+      totalHits
     };
   } catch (error) {
     console.error('Erro ao obter stats do cache:', error);
@@ -148,7 +183,10 @@ async function getStats() {
 async function clear() {
   try {
     memoryCache.clear();
-    await runQuery('DELETE FROM cache');
+    const { error } = await supabase.from('cache').delete().neq('id', 0); // Delete all requires a filter usually
+
+    if (error) throw error;
+
     console.log('🗑️ Cache completamente limpo');
     return true;
   } catch (error) {
@@ -170,3 +208,4 @@ module.exports = {
   getStats,
   clear
 };
+

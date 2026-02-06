@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "@supabase/supabase-js": "^2.95.3",
     "apple-signin-auth": "^1.7.5",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
@@ -27,7 +28,6 @@
     "lru-cache": "^10.1.0",
     "sharp": "^0.33.1",
     "stripe": "^14.18.0",
-    "sqlite3": "^5.1.6",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

@@ -16,20 +16,20 @@ const { version: apiVersion } = require('../package.json');
 const routes = require('./routes');
 const { globalLimiter } = require('./middleware/rateLimiter');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
-const { getDatabase } = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Inicializar banco de dados
-getDatabase();
+// Database initialization handled by models/Supabase client
+
 
 // Middlewares de segurança
 app.use(helmet());
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id']
 }));
 
 // Middlewares de parsing
@@ -108,15 +108,11 @@ server.on('error', (err) => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('🛑 Recebido SIGTERM. Encerrando servidor...');
-  const { closeDatabase } = require('./config/database');
-  await closeDatabase();
   server.close(() => process.exit(0));
 });
 
 process.on('SIGINT', async () => {
   console.log('🛑 Recebido SIGINT. Encerrando servidor...');
-  const { closeDatabase } = require('./config/database');
-  await closeDatabase();
   server.close(() => process.exit(0));
 });
 

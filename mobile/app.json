@@ -30,9 +30,9 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiUrl": "https://magic-sweet-maker-1.onrender.com/api",
-      "supabaseUrl": "https://seu-projeto.supabase.co",
-      "supabaseAnonKey": "sua_anon_key",
+      "apiUrl": "http://localhost:3000/api",
+      "supabaseUrl": "https://zkwluaamveslrihfcvux.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inprd2x1YWFtdmVzbHJpaGZjdnV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkxMzQzMzksImV4cCI6MjA4NDcxMDMzOX0.rH6GNEPEOOqN38wl-q_jUWKXsMF-sqfHu6ZmIgYYu-0",
       "googleClientIdIos": "909357132572-a9vef7bhtp5rfjt7tf802e2u9u88kau9.apps.googleusercontent.com",
       "googleClientIdAndroid": "909357132572-lk8hfr10mrbaqf5aql9ifa2ndcpo29fe.apps.googleusercontent.com",
       "googleClientIdWeb": "909357132572-j6rl0ehai1ekqsh9tcomulan2ickgeuf.apps.googleusercontent.com",
