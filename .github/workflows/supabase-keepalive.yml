@@ -16,19 +16,47 @@ jobs:
     permissions:
       issues: write
     steps:
-      - name: Ping backend Supabase health
+      - name: Ping Supabase health (direct, fallback backend)
         env:
           BACKEND_HEALTH_URL: ${{ vars.BACKEND_HEALTH_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          # Anon key não é segredo no Supabase, mas pode ser colocado como secret se você preferir.
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ANON_KEY_PUBLIC: ${{ vars.SUPABASE_ANON_KEY }}
         run: |
           BACKEND_HEALTH_URL="$(echo -n "$BACKEND_HEALTH_URL" | tr -d '\r' | xargs)"
-          if [ -z "$BACKEND_HEALTH_URL" ]; then
-            echo "BACKEND_HEALTH_URL is not set. Add it in repo variables."
+          SUPABASE_URL="$(echo -n "$SUPABASE_URL" | tr -d '\r' | xargs)"
+          SUPABASE_ANON_KEY="$(echo -n "$SUPABASE_ANON_KEY" | tr -d '\r' | xargs)"
+          SUPABASE_ANON_KEY_PUBLIC="$(echo -n "$SUPABASE_ANON_KEY_PUBLIC" | tr -d '\r' | xargs)"
+
+          if [ -z "$SUPABASE_ANON_KEY" ] && [ -n "$SUPABASE_ANON_KEY_PUBLIC" ]; then
+            SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY_PUBLIC"
+          fi
+
+          CHECK_URL=""
+          CURL_HEADERS=()
+
+          if [ -n "$SUPABASE_URL" ]; then
+            CHECK_URL="${SUPABASE_URL%/}/auth/v1/health"
+            if [ -n "$SUPABASE_ANON_KEY" ]; then
+              CURL_HEADERS=(-H "apikey: ${SUPABASE_ANON_KEY}" -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+            fi
+          else
+            CHECK_URL="$BACKEND_HEALTH_URL"
+          fi
+
+          if [ -z "$CHECK_URL" ]; then
+            echo "No check URL configured. Set vars.SUPABASE_URL (recommended) or vars.BACKEND_HEALTH_URL."
             exit 1
           fi
 
+          # Make the chosen URL available to the failure steps.
+          echo "BACKEND_HEALTH_URL=${CHECK_URL}" >> "$GITHUB_ENV"
+
           # Retry to avoid false positives from transient network issues.
+          MAX_TIME_SECONDS=60
           for attempt in 1 2 3; do
-            code="$(curl -sS -m 15 -o /dev/null -w "%{http_code}" "$BACKEND_HEALTH_URL" || true)"
+            code="$(curl -sS --connect-timeout 10 -m "$MAX_TIME_SECONDS" -o /dev/null -w "%{http_code}" "${CURL_HEADERS[@]}" "$CHECK_URL" || true)"
             echo "Attempt ${attempt}: HTTP ${code}"
             echo "$code" | grep -E "^(200|204)$" && exit 0
             sleep 5
