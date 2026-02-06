@@ -32,6 +32,15 @@ interface DessertItem {
   };
 }
 
+const LOCALE_MAP = {
+  pt: 'pt-BR',
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  de: 'de-DE',
+  ja: 'ja-JP',
+} as const;
+
 export function HistoryScreen() {
   const [desserts, setDesserts] = useState<DessertItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +86,8 @@ export function HistoryScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-US', {
+    const locale = LOCALE_MAP[language] || 'en-US';
+    return date.toLocaleDateString(locale, {
       day: '2-digit',
       month: 'short',
       hour: '2-digit',
@@ -107,9 +117,7 @@ export function HistoryScreen() {
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyEmoji}>{isMasculine ? '🦸' : '🧁'}</Text>
       <Text style={[styles.emptyText, { color: themeColors.textSecondary }]}>
-        {language === 'pt'
-          ? 'Nenhuma sobremesa criada ainda!\nVamos criar a primeira?'
-          : 'No desserts created yet!\nLet\'s create the first one?'}
+        {t.historyEmpty}
       </Text>
     </View>
   );
@@ -123,7 +131,7 @@ export function HistoryScreen() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: themeColors.text }]}>{t.history}</Text>
           <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
-            {language === 'pt' ? `${desserts.length} sobremesas` : `${desserts.length} desserts`}
+            {`${desserts.length} ${t.dessertCountLabel}`}
           </Text>
         </View>
 

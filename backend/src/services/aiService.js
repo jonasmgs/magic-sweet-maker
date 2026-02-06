@@ -25,31 +25,15 @@ if (GEMINI_API_KEY) {
  */
 const PROMPTS = {
   recipe: {
-    pt: (ingredients, theme) => `Crie uma sobremesa infantil mágica usando os ingredientes: ${ingredients}.
-${theme === 'masculine' ? '- Use tema de super-heróis e poderes' : '- Use tema de doces fofos e mágicos'}
-- Gere nome criativo baseado em doce real
-- Receita curta em 3 passos simples
-- Linguagem divertida para crianças
-
-Responda APENAS no formato JSON válido (sem markdown):
-{"name": "Nome da Sobremesa", "ingredients": ["ingrediente 1", "ingrediente 2", "ingrediente 3"], "steps": ["Passo 1", "Passo 2", "Passo 3"]}`,
-
-    en: (ingredients, theme) => `Create a magical children's dessert using the ingredients: ${ingredients}.
-${theme === 'masculine' ? '- Use superhero and powers theme' : '- Use cute and magical sweets theme'}
-- Generate creative name based on a real dessert
-- Short recipe in 3 simple steps
-- Fun language for children
-
-Reply ONLY in valid JSON format (no markdown):
-{"name": "Dessert Name", "ingredients": ["ingredient 1", "ingredient 2", "ingredient 3"], "steps": ["Step 1", "Step 2", "Step 3"]}`
+    pt: (ingredients, theme) => `Crie uma sobremesa infantil m?gica usando os ingredientes: ${ingredients}.\n${theme === "masculine" ? "- Use tema de super-her?is e poderes" : "- Use tema de doces fofos e m?gicos"}\n- Gere nome criativo baseado em doce real\n- Receita curta em 3 passos simples\n- Linguagem divertida para crian?as\n\nResponda APENAS no formato JSON v?lido (sem markdown):\n{"name": "Nome da Sobremesa", "ingredients": ["ingrediente 1", "ingrediente 2", "ingrediente 3"], "steps": ["Passo 1", "Passo 2", "Passo 3"]}` ,
+    en: (ingredients, theme) => `Create a magical kids dessert using the ingredients: ${ingredients}.\n${theme === "masculine" ? "- Use superhero and powers theme" : "- Use cute and magical sweets theme"}\n- Generate a creative name based on a real dessert\n- Short recipe in 3 simple steps\n- Fun language for kids\n\nReply ONLY in valid JSON format (no markdown):\n{"name": "Dessert Name", "ingredients": ["ingredient 1", "ingredient 2", "ingredient 3"], "steps": ["Step 1", "Step 2", "Step 3"]}` ,
+    es: (ingredients, theme) => `Crea un postre infantil m?gico usando los ingredientes: ${ingredients}.\n${theme === "masculine" ? "- Usa tema de superh?roes y poderes" : "- Usa tema de dulces tiernos y m?gicos"}\n- Genera un nombre creativo basado en un postre real\n- Receta corta en 3 pasos simples\n- Lenguaje divertido para ni?os\n\nResponde SOLO en formato JSON v?lido (sin markdown):\n{"name": "Nombre del Postre", "ingredients": ["ingrediente 1", "ingrediente 2", "ingrediente 3"], "steps": ["Paso 1", "Paso 2", "Paso 3"]}` ,
+    fr: (ingredients, theme) => `Cr?e une douceur magique pour les enfants avec les ingr?dients : ${ingredients}.\n${theme === "masculine" ? "- Th?me super-h?ros et pouvoirs" : "- Th?me de douceurs mignonnes et magiques"}\n- G?n?re un nom cr?atif bas? sur un dessert r?el\n- Recette courte en 3 ?tapes simples\n- Langage amusant pour les enfants\n\nR?ponds UNIQUEMENT en JSON valide (sans markdown) :\n{"name": "Nom du dessert", "ingredients": ["ingr?dient 1", "ingr?dient 2", "ingr?dient 3"], "steps": ["?tape 1", "?tape 2", "?tape 3"]}` ,
+    de: (ingredients, theme) => `Erstelle ein magisches Kinderdessert mit den Zutaten: ${ingredients}.\n${theme === "masculine" ? "- Superhelden- und Kr?fte-Thema" : "- S??es, niedliches, magisches Thema"}\n- Erfinde einen kreativen Namen basierend auf einem echten Dessert\n- Kurzes Rezept in 3 einfachen Schritten\n- Kindgerechte, spa?ige Sprache\n\nAntworte NUR im g?ltigen JSON-Format (ohne Markdown):\n{"name": "Dessertname", "ingredients": ["Zutat 1", "Zutat 2", "Zutat 3"], "steps": ["Schritt 1", "Schritt 2", "Schritt 3"]}` ,
+    ja: (ingredients, theme) => `?????????????????????????????: ${ingredients}.\n${theme === "masculine" ? "- ???????????????" : "- ????????????????"}\n- ??????????????????\n- 3?????????????\n- ???????????\n\n???JSON??????????????markdown???:\n{"name": "?????", "ingredients": ["??1", "??2", "??3"], "steps": ["??1", "??2", "??3"]}`
   },
 
-  image: (name, theme) => `Create a charming 3D character inspired by "${name}".
-Dessert-shaped body with ingredients integrated.
-${theme === 'masculine' ? 'Superhero style, dynamic pose, action hero vibe.' : 'Disney-Pixar cinematic style.'}
-Big joyful eyes, playful pose.
-${theme === 'masculine' ? 'Epic cosmic background with stars and energy.' : 'Candy magical background.'}
-High quality 3D render, vibrant colors, studio lighting, no text.`
+  image: (name, theme) => `Create a charming 3D character inspired by "${name}".\nDessert-shaped body with ingredients integrated.\n${theme === "masculine" ? "Superhero style, dynamic pose, action hero vibe." : "Disney-Pixar cinematic style."}\nBig joyful eyes, playful pose.\n${theme === "masculine" ? "Epic cosmic background with stars and energy." : "Candy magical background."}\nHigh quality 3D render, vibrant colors, studio lighting, no text.`
 };
 
 /**
@@ -59,41 +43,41 @@ const MOCK_RECIPES = {
   pt: {
     feminine: [
       {
-        name: 'Brigadeiro Encantado das Fadas',
-        ingredients: ['Leite condensado', 'Chocolate em pó', 'Manteiga', 'Granulado colorido'],
+        name: "Brigadeiro Encantado das Fadas",
+        ingredients: ["Leite condensado", "Chocolate em p?", "Manteiga", "Granulado colorido"],
         steps: [
-          'Misture o leite condensado com o chocolate e a manteiga em uma panela mágica',
-          'Mexa sem parar até a mistura se desprender do fundo (peça ajuda de um adulto!)',
-          'Espere esfriar, faça bolinhas e cubra com granulado colorido'
+          "Misture o leite condensado com o chocolate e a manteiga em uma panela m?gica",
+          "Mexa sem parar at? a mistura se desprender do fundo (pe?a ajuda de um adulto!)",
+          "Espere esfriar, fa?a bolinhas e cubra com granulado colorido"
         ]
       },
       {
-        name: 'Cupcake Arco-Íris da Felicidade',
-        ingredients: ['Farinha', 'Ovos', 'Leite', 'Corante colorido', 'Chantilly'],
+        name: "Cupcake Arco-?ris da Felicidade",
+        ingredients: ["Farinha", "Ovos", "Leite", "Corante colorido", "Chantilly"],
         steps: [
-          'Misture todos os ingredientes secos e depois adicione os líquidos',
-          'Divida a massa e adicione cores diferentes em cada parte',
-          'Asse e decore com chantilly mágico!'
+          "Misture todos os ingredientes secos e depois adicione os l?quidos",
+          "Divida a massa e adicione cores diferentes em cada parte",
+          "Asse e decore com chantilly m?gico!"
         ]
       }
     ],
     masculine: [
       {
-        name: 'Brownie do Poder Supremo',
-        ingredients: ['Chocolate', 'Manteiga', 'Ovos', 'Açúcar', 'Farinha'],
+        name: "Brownie do Poder Supremo",
+        ingredients: ["Chocolate", "Manteiga", "Ovos", "A??car", "Farinha"],
         steps: [
-          'Derreta o chocolate com a manteiga como um super-herói derrete vilões!',
-          'Misture os ovos e açúcar com força total',
-          'Adicione a farinha e asse para ganhar poderes!'
+          "Derreta o chocolate com a manteiga como um super-her?i derrete vil?es!",
+          "Misture os ovos e a??car com for?a total",
+          "Adicione a farinha e asse para ganhar poderes!"
         ]
       },
       {
-        name: 'Shake Turbinado do Trovão',
-        ingredients: ['Leite', 'Sorvete de chocolate', 'Banana', 'Granola'],
+        name: "Shake Turbinado do Trov?o",
+        ingredients: ["Leite", "Sorvete de chocolate", "Banana", "Granola"],
         steps: [
-          'Coloque tudo no liquidificador como se fosse sua arma secreta',
-          'Bata em velocidade máxima até virar energia pura',
-          'Sirva com granola para força extra!'
+          "Coloque tudo no liquidificador como se fosse sua arma secreta",
+          "Bata em velocidade m?xima at? virar energia pura",
+          "Sirva com granola para for?a extra!"
         ]
       }
     ]
@@ -101,23 +85,119 @@ const MOCK_RECIPES = {
   en: {
     feminine: [
       {
-        name: 'Enchanted Fairy Truffle',
-        ingredients: ['Condensed milk', 'Cocoa powder', 'Butter', 'Rainbow sprinkles'],
+        name: "Enchanted Fairy Truffle",
+        ingredients: ["Condensed milk", "Cocoa powder", "Butter", "Rainbow sprinkles"],
         steps: [
-          'Mix condensed milk with cocoa and butter in a magic pot',
-          'Stir constantly until the mixture pulls away from the bottom (ask an adult for help!)',
-          'Let it cool, make little balls and cover with rainbow sprinkles'
+          "Mix condensed milk with cocoa and butter in a magic pot",
+          "Stir constantly until the mixture pulls away from the bottom (ask an adult for help!)",
+          "Let it cool, make little balls and cover with rainbow sprinkles"
         ]
       }
     ],
     masculine: [
       {
-        name: 'Supreme Power Brownie',
-        ingredients: ['Chocolate', 'Butter', 'Eggs', 'Sugar', 'Flour'],
+        name: "Supreme Power Brownie",
+        ingredients: ["Chocolate", "Butter", "Eggs", "Sugar", "Flour"],
         steps: [
-          'Melt chocolate and butter like a superhero melts villains!',
-          'Mix eggs and sugar with full power',
-          'Add flour and bake to gain powers!'
+          "Melt chocolate and butter like a superhero melts villains!",
+          "Mix eggs and sugar with full power",
+          "Add flour and bake to gain powers!"
+        ]
+      }
+    ]
+  },
+  es: {
+    feminine: [
+      {
+        name: "Trufa Encantada de Hadas",
+        ingredients: ["Leche condensada", "Cacao en polvo", "Mantequilla", "Sprinkles de colores"],
+        steps: [
+          "Mezcla la leche condensada con el cacao y la mantequilla en una olla m?gica",
+          "Revuelve sin parar hasta que se despegue del fondo (pide ayuda a un adulto)",
+          "Deja enfriar, haz bolitas y c?brelas con sprinkles"
+        ]
+      }
+    ],
+    masculine: [
+      {
+        name: "Brownie del Poder Supremo",
+        ingredients: ["Chocolate", "Mantequilla", "Huevos", "Az?car", "Harina"],
+        steps: [
+          "Derrite el chocolate con la mantequilla como un superh?roe",
+          "Mezcla los huevos y el az?car con toda tu energ?a",
+          "Agrega la harina y hornea para ganar poderes"
+        ]
+      }
+    ]
+  },
+  fr: {
+    feminine: [
+      {
+        name: "Truffe F?erique Enchant?e",
+        ingredients: ["Lait concentr?", "Cacao en poudre", "Beurre", "Vermicelles color?s"],
+        steps: [
+          "M?lange le lait concentr?, le cacao et le beurre dans une casserole magique",
+          "Remue sans t?arr?ter jusqu?? ce que ?a se d?colle du fond (demande l?aide d?un adulte)",
+          "Laisse refroidir, forme des petites boules et roule-les dans les vermicelles"
+        ]
+      }
+    ],
+    masculine: [
+      {
+        name: "Brownie du Pouvoir Supr?me",
+        ingredients: ["Chocolat", "Beurre", "?ufs", "Sucre", "Farine"],
+        steps: [
+          "Fais fondre le chocolat et le beurre comme un super-h?ros",
+          "M?lange les ?ufs et le sucre avec toute ta force",
+          "Ajoute la farine et fais cuire pour gagner des pouvoirs"
+        ]
+      }
+    ]
+  },
+  de: {
+    feminine: [
+      {
+        name: "Zauberhafte Feen-Tr?ffel",
+        ingredients: ["Kondensmilch", "Kakaopulver", "Butter", "Bunte Streusel"],
+        steps: [
+          "Vermische Kondensmilch, Kakao und Butter im magischen Topf",
+          "R?hre, bis sich die Masse vom Boden l?st (bitte einen Erwachsenen um Hilfe)",
+          "Abk?hlen lassen, kleine Kugeln formen und in Streuseln w?lzen"
+        ]
+      }
+    ],
+    masculine: [
+      {
+        name: "Ultimativer Power-Brownie",
+        ingredients: ["Schokolade", "Butter", "Eier", "Zucker", "Mehl"],
+        steps: [
+          "Schmelze Schokolade und Butter wie ein Superheld",
+          "Verr?hre Eier und Zucker mit voller Kraft",
+          "Mehl dazugeben und backen, um Kr?fte zu gewinnen"
+        ]
+      }
+    ]
+  },
+  ja: {
+    feminine: [
+      {
+        name: "??????????",
+        ingredients: ["??", "???????", "???", "??????????"],
+        steps: [
+          "?????????????????????",
+          "?????????????????????????????????",
+          "????????????????????"
+        ]
+      }
+    ],
+    masculine: [
+      {
+        name: "?????????????",
+        ingredients: ["??????", "???", "?", "??", "???"],
+        steps: [
+          "????????????????????",
+          "??????????????",
+          "???????????????????"
         ]
       }
     ]
@@ -141,7 +221,8 @@ const MOCK_IMAGES = {
  * Gera receita mock
  */
 function getMockRecipe(language, theme) {
-  const recipes = MOCK_RECIPES[language]?.[theme] || MOCK_RECIPES.pt.feminine;
+  const recipesByLang = MOCK_RECIPES[language] || MOCK_RECIPES.en || MOCK_RECIPES.pt;
+  const recipes = recipesByLang[theme] || recipesByLang.feminine || MOCK_RECIPES.pt.feminine;
   return recipes[Math.floor(Math.random() * recipes.length)];
 }
 
@@ -157,7 +238,8 @@ function getMockImage(theme) {
  * Gera receita com Gemini
  */
 async function generateRecipeWithAI(ingredients, theme, language) {
-  const prompt = PROMPTS.recipe[language](ingredients, theme);
+  const recipePrompt = PROMPTS.recipe[language] || PROMPTS.recipe.en;
+  const prompt = recipePrompt(ingredients, theme);
 
   const result = await model.generateContent(prompt);
   const response = await result.response;

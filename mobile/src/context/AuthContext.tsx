@@ -1,14 +1,12 @@
 /**
- * Contexto de Autenticação
+ * Auth context
  *
- * Gerencia estado de autenticação do usuário.
+ * Uses Supabase session and backend profile (/auth/me).
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import * as Device from 'expo-device';
-import * as Application from 'expo-application';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { authService, User } from '../services/api';
+import { supabase } from '../services/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -29,141 +27,134 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Obter device ID único
-  const getDeviceId = async (): Promise<string> => {
-    let deviceId = await SecureStore.getItemAsync('deviceId');
-    if (!deviceId) {
-      // Gerar ID único baseado no dispositivo
-      const androidId = Application.getAndroidId?.() || '';
-      const iosId = await Application.getIosIdForVendorAsync?.() || '';
-      deviceId = androidId || iosId || `${Device.modelName}-${Date.now()}`;
-      await SecureStore.setItemAsync('deviceId', deviceId);
+  const loadBackendUser = async (): Promise<User | null> => {
+    try {
+      const response = await authService.me();
+      if (response.success && response.user) {
+        setUser(response.user);
+        return response.user;
+      } else {
+        setUser(null);
+        return null;
+      }
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        setUser(null);
+        await supabase.auth.signOut();
+        return null;
+      } else {
+        console.error('Erro ao buscar usuario:', error);
+        setUser(null);
+        return null;
+      }
     }
-    return deviceId;
   };
 
-  // Verificar autenticação ao iniciar
   useEffect(() => {
-    checkAuth();
-  }, []);
+    let isMounted = true;
 
-  const checkAuth = async () => {
-    try {
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (token) {
-        const response = await authService.me();
-        if (response.success) {
-          setUser(response.user);
+    const init = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          await loadBackendUser();
+        } else {
+          setUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
         }
       }
-    } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
-      // Limpar tokens inválidos
-      await SecureStore.deleteItemAsync('accessToken');
-      await SecureStore.deleteItemAsync('refreshToken');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  const login = async (email: string, password: string) => {
-    try {
-      const deviceId = await getDeviceId();
-      const response = await authService.login(email, password, deviceId);
+    init();
 
-      if (response.success) {
-        await SecureStore.setItemAsync('accessToken', response.accessToken);
-        await SecureStore.setItemAsync('refreshToken', response.refreshToken);
-        setUser(response.user);
-        return { success: true };
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event: unknown, session: any) => {
+      if (!isMounted) return;
+
+      if (session) {
+        await loadBackendUser();
+      } else {
+        setUser(null);
       }
+    });
 
-      return { success: false, error: 'Erro ao fazer login' };
-    } catch (error: any) {
-      const message = error.response?.data?.error || 'Erro ao fazer login';
-      return { success: false, error: message };
-    }
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async () => {
+    return { success: false, error: 'Login por email/senha desativado. Use Google ou Apple.' };
   };
 
-  const register = async (email: string, password: string, name?: string) => {
-    try {
-      const deviceId = await getDeviceId();
-      const response = await authService.register(email, password, name, deviceId);
-
-      if (response.success) {
-        await SecureStore.setItemAsync('accessToken', response.accessToken);
-        await SecureStore.setItemAsync('refreshToken', response.refreshToken);
-        setUser(response.user);
-        return { success: true };
-      }
-
-      return { success: false, error: 'Erro ao criar conta' };
-    } catch (error: any) {
-      const message = error.response?.data?.error || 'Erro ao criar conta';
-      return { success: false, error: message };
-    }
-  };
-
-  const logout = async () => {
-    try {
-      const refreshToken = await SecureStore.getItemAsync('refreshToken');
-      await authService.logout(refreshToken || undefined);
-    } catch (error) {
-      console.error('Erro no logout:', error);
-    } finally {
-      await SecureStore.deleteItemAsync('accessToken');
-      await SecureStore.deleteItemAsync('refreshToken');
-      setUser(null);
-    }
+  const register = async () => {
+    return { success: false, error: 'Cadastro desativado. Use Google ou Apple.' };
   };
 
   const loginWithGoogle = async (idToken: string) => {
     try {
-      const deviceId = await getDeviceId();
-      const response = await authService.loginWithGoogle(idToken, deviceId);
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
 
-      if (response.success) {
-        await SecureStore.setItemAsync('accessToken', response.accessToken);
-        await SecureStore.setItemAsync('refreshToken', response.refreshToken);
-        setUser(response.user);
-        return { success: true };
+      if (error) {
+        return { success: false, error: error.message };
       }
 
+      const backendUser = await loadBackendUser();
+      if (!backendUser) {
+        return { success: false, error: 'Login ok, mas falhou ao carregar perfil no backend. Verifique apiUrl e SUPABASE_JWT_SECRET.' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao fazer login com Google:', error);
       return { success: false, error: 'Erro ao fazer login com Google' };
-    } catch (error: any) {
-      const message = error.response?.data?.error || 'Erro ao fazer login com Google';
-      return { success: false, error: message };
     }
   };
 
   const loginWithApple = async (idToken: string) => {
     try {
-      const deviceId = await getDeviceId();
-      const response = await authService.loginWithApple(idToken, deviceId);
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: idToken,
+      });
 
-      if (response.success) {
-        await SecureStore.setItemAsync('accessToken', response.accessToken);
-        await SecureStore.setItemAsync('refreshToken', response.refreshToken);
-        setUser(response.user);
-        return { success: true };
+      if (error) {
+        return { success: false, error: error.message };
       }
 
+      const backendUser = await loadBackendUser();
+      if (!backendUser) {
+        return { success: false, error: 'Login ok, mas falhou ao carregar perfil no backend. Verifique apiUrl e SUPABASE_JWT_SECRET.' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao fazer login com Apple:', error);
       return { success: false, error: 'Erro ao fazer login com Apple' };
-    } catch (error: any) {
-      const message = error.response?.data?.error || 'Erro ao fazer login com Apple';
-      return { success: false, error: message };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    } finally {
+      await supabase.auth.signOut();
+      setUser(null);
     }
   };
 
   const refreshUser = async () => {
-    try {
-      const response = await authService.me();
-      if (response.success) {
-        setUser(response.user);
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
-    }
+    await loadBackendUser();
   };
 
   const updateCredits = (credits: number) => {

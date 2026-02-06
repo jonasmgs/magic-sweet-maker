@@ -32,6 +32,7 @@ export function ProfileScreen() {
     { code: 'es', label: '🇪🇸 ES' },
     { code: 'fr', label: '🇫🇷 FR' },
     { code: 'de', label: '🇩🇪 DE' },
+    { code: 'ja', label: '???? JA' },
   ] as const;
 
   const handleUpgrade = async () => {
@@ -315,12 +316,10 @@ const styles = StyleSheet.create({
   },
   optionButtons: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.xs,
-  },
-  optionButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
+    justifyContent: 'flex-end',
+    flexShrink: 1,
   },
   optionText: {
     fontSize: fonts.sizes.sm,

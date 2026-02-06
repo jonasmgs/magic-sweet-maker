@@ -77,7 +77,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Iniciar servidor
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`
 🍭 ═══════════════════════════════════════════════════════════ 🍭
 
@@ -93,19 +93,29 @@ app.listen(PORT, () => {
   `);
 });
 
+server.on('error', (err) => {
+  if (err && err.code === 'EADDRINUSE') {
+    console.error(`Porta ${PORT} ja esta em uso. Feche o processo que esta usando essa porta ou defina outra PORT no backend/.env.`);
+    process.exit(1);
+  }
+
+  console.error('Erro ao iniciar servidor:', err);
+  process.exit(1);
+});
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('🛑 Recebido SIGTERM. Encerrando servidor...');
   const { closeDatabase } = require('./config/database');
   await closeDatabase();
-  process.exit(0);
+  server.close(() => process.exit(0));
 });
 
 process.on('SIGINT', async () => {
   console.log('🛑 Recebido SIGINT. Encerrando servidor...');
   const { closeDatabase } = require('./config/database');
   await closeDatabase();
-  process.exit(0);
+  server.close(() => process.exit(0));
 });
 
 module.exports = app;

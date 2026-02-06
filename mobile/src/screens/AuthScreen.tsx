@@ -35,6 +35,15 @@ export function AuthScreen() {
   const themeColors = getThemeColors(theme);
   const isMasculine = theme === 'masculine';
 
+  const languageOptions = [
+    { code: 'pt', label: '???? PT' },
+    { code: 'en', label: '???? EN' },
+    { code: 'es', label: '???? ES' },
+    { code: 'fr', label: '???? FR' },
+    { code: 'de', label: '???? DE' },
+    { code: 'ja', label: '???? JA' },
+  ] as const;
+
   const googleClientIdIos = Constants.expoConfig?.extra?.googleClientIdIos;
   const googleClientIdAndroid = Constants.expoConfig?.extra?.googleClientIdAndroid;
   const googleClientIdWeb = Constants.expoConfig?.extra?.googleClientIdWeb;
@@ -50,13 +59,13 @@ export function AuthScreen() {
       if (response?.type === 'success') {
         const idToken = (response.authentication as any)?.idToken || (response.params as any)?.id_token;
         if (!idToken) {
-          Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Token do Google não encontrado');
+          Alert.alert(t.errorShort, t.errorGoogleTokenMissing);
           return;
         }
         setLoading(true);
         const result = await loginWithGoogle(idToken);
         if (!result.success) {
-          Alert.alert(language === 'pt' ? 'Erro' : 'Error', result.error || 'Erro ao entrar com Google');
+          Alert.alert(t.errorShort, result.error || t.errorGoogleLogin);
         }
         setLoading(false);
       }
@@ -69,7 +78,7 @@ export function AuthScreen() {
     try {
       await promptAsync();
     } catch {
-      Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Erro ao abrir login do Google');
+      Alert.alert(t.errorShort, t.errorGoogleOpen);
     }
   };
 
@@ -82,18 +91,18 @@ export function AuthScreen() {
         ],
       });
       if (!credential.identityToken) {
-        Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Token da Apple não encontrado');
+        Alert.alert(t.errorShort, t.errorAppleTokenMissing);
         return;
       }
       setLoading(true);
       const result = await loginWithApple(credential.identityToken);
       if (!result.success) {
-        Alert.alert(language === 'pt' ? 'Erro' : 'Error', result.error || 'Erro ao entrar com Apple');
+        Alert.alert(t.errorShort, result.error || t.errorAppleLogin);
       }
       setLoading(false);
     } catch (err: any) {
       if (err?.code !== 'ERR_CANCELED') {
-        Alert.alert(language === 'pt' ? 'Erro' : 'Error', 'Erro ao entrar com Apple');
+        Alert.alert(t.errorShort, t.errorAppleLogin);
       }
     }
   };
@@ -112,18 +121,15 @@ export function AuthScreen() {
             {/* Header com opções */}
             <View style={styles.header}>
               <View style={styles.languageButtons}>
-                <TouchableOpacity
-                  onPress={() => setLanguage('pt')}
-                  style={[styles.langButton, language === 'pt' && styles.langButtonActive]}
-                >
-                  <Text style={styles.langText}>🇧🇷 PT</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setLanguage('en')}
-                  style={[styles.langButton, language === 'en' && styles.langButtonActive]}
-                >
-                  <Text style={styles.langText}>🇺🇸 EN</Text>
-                </TouchableOpacity>
+                {languageOptions.map(option => (
+                  <TouchableOpacity
+                    key={option.code}
+                    onPress={() => setLanguage(option.code)}
+                    style={[styles.langButton, language === option.code && styles.langButtonActive]}
+                  >
+                    <Text style={styles.langText}>{option.label}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
               <View style={styles.themeButtons}>
                 <TouchableOpacity
@@ -153,11 +159,11 @@ export function AuthScreen() {
             {/* Login Social */}
             <View style={[styles.form, { backgroundColor: themeColors.card }, shadows.lg]}>
               <Text style={[styles.formTitle, { color: themeColors.text }]}>
-                {language === 'pt' ? 'Entrar' : 'Sign in'}
+                {t.login}
               </Text>
 
               <Button
-                title={language === 'pt' ? 'Continuar com Google' : 'Continue with Google'}
+                title={t.continueWithGoogle}
                 onPress={handleGoogleLogin}
                 loading={loading}
                 icon="G"
@@ -179,9 +185,7 @@ export function AuthScreen() {
               )}
 
               <Text style={[styles.helperText, { color: themeColors.textSecondary }]}>
-                {language === 'pt'
-                  ? 'Cadastro e login somente via Google ou Apple.'
-                  : 'Sign up and sign in only via Google or Apple.'}
+                {t.authProvidersOnly}
               </Text>
             </View>
 
@@ -223,13 +227,9 @@ const styles = StyleSheet.create({
   },
   languageButtons: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.xs,
-  },
-  langButton: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    flex: 1,
   },
   langButtonActive: {
     backgroundColor: 'rgba(255,255,255,0.4)',

@@ -34,7 +34,7 @@ export function ResultScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>
-          {language === 'pt' ? 'Receita não encontrada' : 'Recipe not found'}
+          {t.recipeNotFound}
         </Text>
       </View>
     );
@@ -94,7 +94,7 @@ export function ResultScreen() {
             {/* Ingredientes */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>
-                {isMasculine ? '⚡ Ingredientes' : t.ingredientsTitle}
+                {isMasculine ? t.ingredientsTitleHero : t.ingredientsTitle}
               </Text>
               <View style={styles.ingredientsList}>
                 {recipe.ingredients.map((ingredient, index) => (
@@ -117,7 +117,7 @@ export function ResultScreen() {
             {/* Passos */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: themeColors.primary }]}>
-                {isMasculine ? '🦸 Como Fazer' : t.stepsTitle}
+                {isMasculine ? t.stepsTitleHero : t.stepsTitle}
               </Text>
               <View style={styles.stepsList}>
                 {recipe.steps.map((step, index) => (

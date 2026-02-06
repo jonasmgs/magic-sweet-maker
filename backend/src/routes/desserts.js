@@ -24,7 +24,7 @@ router.post('/generate',
       .isIn(['feminine', 'masculine']).withMessage('Tema inválido'),
     body('language')
       .optional()
-      .isIn(['pt', 'en']).withMessage('Idioma inválido')
+      .isIn(['pt', 'en', 'es', 'fr', 'de', 'ja']).withMessage('Idioma inválido')
   ],
   validate,
   dessertController.generate

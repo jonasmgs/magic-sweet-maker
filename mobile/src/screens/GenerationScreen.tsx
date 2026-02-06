@@ -44,8 +44,13 @@ export function GenerationScreen() {
       console.error('Erro na geração:', error);
 
       const errorData = error.response?.data;
-      let errorMessage = t.generateErrorDefault;\n
-      if (errorData?.errorType === 'credits') {\n        errorMessage = t.generateErrorCredits;\n      } else if (errorData?.errorType === 'rate-limit') {\n        errorMessage = t.generateErrorRateLimit;\n      }
+      let errorMessage = t.generateErrorDefault;
+
+      if (errorData?.errorType === 'credits') {
+        errorMessage = t.generateErrorCredits;
+      } else if (errorData?.errorType === 'rate-limit') {
+        errorMessage = t.generateErrorRateLimit;
+      }
 
       Alert.alert(
         t.oopsTitle,

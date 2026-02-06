@@ -8,9 +8,9 @@ Gerador de Sobremesas Mágicas Infantis com IA - App React Native + API Node.js
 - 🖼️ **Imagens Mágicas**: Personagens 3D estilo Pixar/Disney
 - 👶 **Para Crianças**: Interface divertida e segura
 - 🎭 **2 Temas**: Doces Fofos 🧁 ou Super-Heróis ⚡
-- 🌍 **Multilíngue**: Português, Inglês, Espanhol, Francês e Alemão
+- 🌍 **Multilíngue**: Português, Inglês, Espanhol, Francês, Alemão e Japonês
 - 💳 **Sistema de Créditos**:  Premium (150)
-- 🔐 **Autenticação JWT**: Login seguro com refresh tokens
+- 🔐 **Autenticação Supabase**: OAuth + sessões gerenciadas pelo Supabase
 - 📱 **100% Nativo**: Android e iOS com React Native/Expo
 
 ## 📁 Estrutura
@@ -46,7 +46,7 @@ magic-sweet-maker/
 ```bash
 cd backend
 cp .env.example .env
-# Edite .env e adicione sua GEMINI_API_KEY
+# Edite .env e adicione sua GEMINI_API_KEY e variáveis do Supabase
 
 npm install
 npm run migrate
@@ -68,6 +68,10 @@ npx expo start --android
 npx expo start --ios
 ```
 
+### Configuração do Supabase no mobile
+
+Edite `mobile/app.json` e preencha `supabaseUrl` e `supabaseAnonKey` dentro de `expo.extra`.
+
 ## ⚙️ Variáveis de Ambiente
 
 Crie um arquivo `backend/.env`:
@@ -77,21 +81,13 @@ Crie um arquivo `backend/.env`:
 PORT=3000
 NODE_ENV=development
 
-# JWT (gere uma chave segura!)
-JWT_SECRET=sua-chave-super-secreta-aqui
-JWT_EXPIRES_IN=7d
-JWT_REFRESH_EXPIRES_IN=30d
-
 # Banco de Dados
 DATABASE_PATH=./database.sqlite
 
-# Supabase (keep-alive)
+# Supabase
 SUPABASE_URL=https://seu-projeto.supabase.co
 SUPABASE_ANON_KEY=sua_anon_key
-
-# Google/Apple Auth
-GOOGLE_CLIENT_ID=seu_google_client_id
-APPLE_CLIENT_ID=seu_apple_client_id
+SUPABASE_JWT_SECRET=seu_jwt_secret
 
 # Google Gemini API
 GEMINI_API_KEY=sua-api-key-do-gemini
@@ -144,12 +140,9 @@ STRIPE_CANCEL_URL=https://seusite.com/pagamento/cancelado
 
 ## 📊 API Endpoints
 
-### Autenticação
+### Autenticação (via Supabase)
 ```
-POST /api/auth/register - Cadastro
-POST /api/auth/login    - Login
 GET  /api/auth/me       - Dados do usuário
-POST /api/auth/refresh  - Renovar token
 POST /api/auth/logout   - Logout
 ```
 
@@ -174,7 +167,7 @@ POST /api/users/upgrade  - Upgrade Premium
 - ✅ Rate limiting global e por rota
 - ✅ CORS configurável
 - ✅ Bcrypt para senhas (12 rounds)
-- ✅ JWT com refresh tokens
+- ✅ JWT do Supabase validado no backend
 - ✅ Validação de ingredientes
 - ✅ Validação com express-validator
 - ✅ Proteção contra device fraud

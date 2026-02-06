@@ -4,6 +4,7 @@
  * Aplicativo de geração de sobremesas mágicas infantis com IA.
  */
 
+import 'react-native-url-polyfill/auto';
 import React from 'react';
 import { StatusBar, ActivityIndicator, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
