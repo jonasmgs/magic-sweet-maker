@@ -11,6 +11,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 
+const { version: apiVersion } = require('../package.json');
+
 const routes = require('./routes');
 const { globalLimiter } = require('./middleware/rateLimiter');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
@@ -60,7 +62,7 @@ app.use('/api', routes);
 app.get('/', (req, res) => {
   res.json({
     name: 'Magic Sweet Maker API',
-    version: '1.0.0',
+    version: apiVersion,
     description: 'API para geração de sobremesas mágicas infantis com IA',
     endpoints: {
       health: '/api/health',
